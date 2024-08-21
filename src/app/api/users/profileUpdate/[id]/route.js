@@ -1,7 +1,7 @@
-import { UploadImage } from "../../../../helpers/upload-image";
+import { UploadImage } from "../../../../../helpers/upload-image";
 import { NextResponse } from "next/server";
-import User from "../../../../models/userModel";
-import { connect } from "../../../../db/dbConfig";
+import User from "../../../../../models/userModel";
+import { connect } from "../../../../../db/dbConfig"
 import mongoose from "mongoose";
 
 connect();

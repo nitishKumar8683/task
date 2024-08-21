@@ -19,8 +19,8 @@ export async function PUT(request, { params }) {
         }
 
         const dataResponse = NextResponse.json({
-            message: "Updated Successfull",
-            status: 201,
+            message: "Updated Successfullaa",
+            status: 201, 
             updatedUser,
         });
         return dataResponse;

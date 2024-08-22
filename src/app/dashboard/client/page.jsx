@@ -58,13 +58,7 @@ const Page = () => {
   const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
 
   const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email is required"),
-    phonenumber: Yup.string()
-      .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
-      .required("Phone number is required"),
+    name: Yup.string().required("Name is required")
   });
 
   const handleAddSubmit = async (values, { resetForm }) => {
@@ -162,7 +156,7 @@ const Page = () => {
               className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <FaPlus size={16} className="mr-2" />
-              Add Client
+              Add New Client
             </button>
           </div>
         </div>
@@ -188,13 +182,7 @@ const Page = () => {
             <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Phone Number
+                Client Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Actions
@@ -210,12 +198,6 @@ const Page = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {item.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.phonenumber}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex space-x-2">
                       <button
@@ -274,13 +256,11 @@ const Page = () => {
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Add Client
+                  Add New Client
                 </Dialog.Title>
                 <Formik
                   initialValues={{
                     name: "",
-                    email: "",
-                    phonenumber: "",
                   }}
                   validationSchema={validationSchema}
                   onSubmit={handleAddSubmit}
@@ -306,44 +286,7 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
-                        <label
-                          htmlFor="email"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Email
-                        </label>
-                        <Field
-                          type="email"
-                          id="email"
-                          name="email"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <ErrorMessage
-                          name="email"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="phonenumber"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Phone Number
-                        </label>
-                        <Field
-                          type="text"
-                          id="phonenumber"
-                          name="phonenumber"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <ErrorMessage
-                          name="phonenumber"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
+                      
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"
@@ -389,8 +332,6 @@ const Page = () => {
                   initialValues={
                     editItemData || {
                       name: "",
-                      email: "",
-                      phonenumber: "",
                     }
                   }
                   validationSchema={validationSchema}
@@ -418,44 +359,7 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
-                        <label
-                          htmlFor="email"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Email
-                        </label>
-                        <Field
-                          type="email"
-                          id="email"
-                          name="email"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <ErrorMessage
-                          name="email"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
-                      <div>
-                        <label
-                          htmlFor="phonenumber"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Phone Number
-                        </label>
-                        <Field
-                          type="text"
-                          id="phonenumber"
-                          name="phonenumber"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        />
-                        <ErrorMessage
-                          name="phonenumber"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
+                      
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"

@@ -7,24 +7,11 @@ connect()
 export async function POST(req) {
     try {
         const reqBody = await req.json()
-        const { name, email, phonenumber } = reqBody
-        console.log(name, email, phonenumber)
-
-        const client = await Client.findOne({ email: email });
-        if (client) {
-            return NextResponse.json({
-                message: "Client already exists",
-                status: 400 
-            })
-        }
+        const { name } = reqBody
 
         const newClient = new Client({
             name,
-            email,
-            phonenumber,
             isDelete: "",
-            image_url: "",
-            public_id: "",
         })
         const savedClient = await newClient.save();
         console.log(savedClient);

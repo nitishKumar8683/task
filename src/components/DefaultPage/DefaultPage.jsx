@@ -75,9 +75,26 @@ const Home = ({ children }) => {
     }
   };
 
+ 
+
   const Name = userAPIData?.name || "John";
   const role = userAPIData?.role || "user";
   const image = userAPIData?.image_url || "user";
+
+   const renderDashboardText = (role) => {
+     switch (role) {
+       case "admin":
+         return "Admin Dashboard";
+       case "teamlead":
+         return "TL Dashboard";
+      //  case "manager":
+      //    return "Manager Dashboard";
+       case "employee":
+         return "Employee Dashboard";
+       default:
+         return "Dashboard"; 
+     }
+   };
 
   const sidebarContent = (
     <div
@@ -93,9 +110,7 @@ const Home = ({ children }) => {
         <div className="flex items-center mb-4">
           <Avatar src={image} alt="Profile" className="mr-4" />
           <div>
-            <h2 className="text-lg font-bold">
-              {role === "admin" ? "Admin Dashboard" : "User Dashboard"}
-            </h2>
+            <h2 className="text-lg font-bold">{renderDashboardText(role)}</h2>
             <p className="text-sm">{Name}</p>
           </div>
         </div>
@@ -116,12 +131,12 @@ const Home = ({ children }) => {
                 <List component="div" disablePadding>
                   <Link href="/dashboard/client" passHref>
                     <ListItem button className="pl-8">
-                      <ListItemText primary="Client" />
+                      <ListItemText primary="Manage Clients" />
                     </ListItem>
                   </Link>
                   <Link href="/dashboard/project" passHref>
                     <ListItem button className="pl-8">
-                      <ListItemText primary="Project" />
+                      <ListItemText primary="Manage Projects" />
                     </ListItem>
                   </Link>
                 </List>
@@ -129,15 +144,15 @@ const Home = ({ children }) => {
               <Divider />
               <Link href="/dashboard/user">
                 <ListItem button>
-                  <ListItemText primary="User" />
+                  <ListItemText primary="Employees" />
                 </ListItem>
               </Link>
             </>
           )}
-          {role === "manager" && (
-            <Link href="/dashboard/request-user" passHref>
+          {["manager", "employee", "teamlead"].includes(role) && (
+            <Link href="/dashboard/taskwork" passHref>
               <ListItem button>
-                <ListItemText primary="Task Request" />
+                <ListItemText primary="Work Task" />
               </ListItem>
             </Link>
           )}

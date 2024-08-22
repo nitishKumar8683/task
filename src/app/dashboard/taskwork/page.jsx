@@ -156,7 +156,7 @@ const Page = () => {
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-extrabold text-gray-800 border-b-4 border-indigo-600 pb-2 mb-4">
-            User Data
+            Task Work Data
           </h1>
 
           <div className="flex justify-end">
@@ -165,7 +165,7 @@ const Page = () => {
               className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <FaPlus size={16} className="mr-2" />
-              Add New Employee
+              Add Task Work
             </button>
           </div>
         </div>
@@ -191,16 +191,10 @@ const Page = () => {
             <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Name
+                  Client Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Email
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Phone Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Role
+                  Project Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Actions
@@ -219,12 +213,6 @@ const Page = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {item.email}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.phonenumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.role}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex space-x-2">
                       <button
@@ -278,12 +266,12 @@ const Page = () => {
 
         {/* Add User Modal */}
         <Transition appear show={isAddModalOpen} as={Fragment}>
-          <Dialog as="div" open={isAddModalOpen} onClose={handleCloseAddModal}>
+          <Dialog as="div" open={isAddModalOpen} onClose={handleCloseAddModal} className="relative z-10">
             <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Add New Employees
+                  Add Task Work
                 </Dialog.Title>
                 <Formik
                   initialValues={{
@@ -302,7 +290,7 @@ const Page = () => {
                           htmlFor="name"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Name
+                          Client Name
                         </label>
                         <Field
                           type="text"
@@ -321,7 +309,7 @@ const Page = () => {
                           htmlFor="email"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Email
+                          Project Name
                         </label>
                         <Field
                           type="email"
@@ -340,7 +328,26 @@ const Page = () => {
                           htmlFor="phonenumber"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Phone Number
+                          Task
+                        </label>
+                        <Field
+                          type="text"
+                          id="phonenumber"
+                          name="phonenumber"
+                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        <ErrorMessage
+                          name="phonenumber"
+                          component="div"
+                          className="text-red-600 text-sm mt-1"
+                        />
+                      </div>
+                      <div>
+                        <label
+                          htmlFor="phonenumber"
+                          className="block text-sm font-medium text-gray-700"
+                        >
+                          Time
                         </label>
                         <Field
                           type="text"
@@ -359,7 +366,7 @@ const Page = () => {
                           htmlFor="role"
                           className="block text-sm font-medium text-gray-700"
                         >
-                          Role
+                          Status
                         </label>
                         <Field
                           as="select"
@@ -367,10 +374,10 @@ const Page = () => {
                           name="role"
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
-                          <option value="">Select a role</option>
-                          <option value="teamlead">Team Lead</option>
-                          {/* <option value="manager">Manager</option> */}
-                          <option value="employee">Employee</option>
+                          <option value="">Select a status</option>
+                          <option value="completed">Completed</option>
+                          <option value="wip">Work In Progress</option>
+                          <option value="Aborted">Aborted</option>
                         </Field>
                         <ErrorMessage
                           name="role"

@@ -158,7 +158,7 @@ const Page = () => {
               className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <FaPlus size={16} className="mr-2" />
-              Add Project
+              Add New Project
             </button>
           </div>
         </div>
@@ -258,7 +258,7 @@ const Page = () => {
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Add Project
+                  Add New Project
                 </Dialog.Title>
                 <Formik
                   initialValues={{

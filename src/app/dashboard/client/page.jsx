@@ -2,9 +2,9 @@
 import React, { useEffect, useState, Fragment } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchUserData,
+  fetchClientData,
   clearUserData,
-} from "../../../app/redux/user/userSlice";
+} from "../../../app/redux/client/clientSlice";
 import DefaultPage from "../../../components/DefaultPage/DefaultPage";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Dialog, Transition } from "@headlessui/react";
@@ -16,7 +16,6 @@ import "react-toastify/dist/ReactToastify.css";
 import ClipLoader from "react-spinners/ClipLoader";
 import { PuffLoader } from "react-spinners";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { FaUserCircle } from "react-icons/fa";
 
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,17 +30,17 @@ const Page = () => {
   const itemsPerPage = 5;
 
   const dispatch = useDispatch();
-  const { userAllAPIData, isLoading, error } = useSelector(
-    (state) => state.userAll
+  const { clientAllAPIData, isLoading, error } = useSelector(
+    (state) => state.clientAll
   );
 
   useEffect(() => {
-    dispatch(fetchUserData());
-
-    return () => {
-      dispatch(clearUserData());
-    };
+    dispatch(fetchClientData());
   }, [dispatch]);
+
+  useEffect(() => {
+    console.log("Client Data:", clientAllAPIData);
+  }, [clientAllAPIData]);
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
   const handleCloseAddModal = () => setIsAddModalOpen(false);
@@ -66,20 +65,20 @@ const Page = () => {
     phonenumber: Yup.string()
       .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
       .required("Phone number is required"),
-    role: Yup.string().required("Role is required"),
   });
 
   const handleAddSubmit = async (values, { resetForm }) => {
     setIsSubmitting(true);
     try {
-      const response = await axios.post("/api/users/register", values);
-      toast.success("User added successfully!");
+      const response = await axios.post("/api/client/register", values);
+      console.log(response);
+      toast.success("Client added successfully!");
       resetForm();
       handleCloseAddModal();
-      dispatch(fetchUserData());
+      dispatch(fetchClientData());
     } catch (error) {
       console.error("Error submitting form:", error);
-      toast.error("Failed to add user.");
+      toast.error("Failed to add Client.");
     } finally {
       setIsSubmitting(false);
     }
@@ -89,14 +88,14 @@ const Page = () => {
     setIsSubmitting(true);
     try {
       const response = await axios.put(
-        `/api/users/updateUser/${editItemData._id}`,
+        `/api/client/updateUser/${editItemData._id}`,
         values
       );
       console.log(response);
       if (response.data.status === 201) {
         toast.success(response.data.message);
         handleCloseEditModal();
-        dispatch(fetchUserData());
+        dispatch(fetchClientData());
       } else {
         toast.error(response.data.message);
       }
@@ -111,11 +110,11 @@ const Page = () => {
   const handleConfirmDelete = async () => {
     setIsDeleting(true);
     try {
-      const response = await axios.delete(`/api/users/deleteUser/${itemId}`);
+      const response = await axios.delete(`/api/client/deleteUser/${itemId}`);
       if (response.data.status === 200) {
         toast.success(response.data.message);
         handleCloseDeleteModal();
-        dispatch(fetchUserData());
+        dispatch(fetchClientData());
       } else {
         toast.error(response.data.message);
       }
@@ -127,19 +126,17 @@ const Page = () => {
     }
   };
 
-  const filteredData = userAllAPIData
-    ? userAllAPIData.filter(
+  const filteredData = clientAllAPIData
+    ? clientAllAPIData.filter(
         (item) =>
           item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.role.toLowerCase().includes(searchTerm.toLowerCase())
+          item.email.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-  // Calculate the data to display based on the current page
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
@@ -156,7 +153,7 @@ const Page = () => {
       <div className="p-6 bg-gray-50 min-h-screen">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-extrabold text-gray-800 border-b-4 border-indigo-600 pb-2 mb-4">
-            User Data
+            Client Data
           </h1>
 
           <div className="flex justify-end">
@@ -165,7 +162,7 @@ const Page = () => {
               className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             >
               <FaPlus size={16} className="mr-2" />
-              Add User
+              Add Client
             </button>
           </div>
         </div>
@@ -200,9 +197,6 @@ const Page = () => {
                   Phone Number
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Role
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
@@ -222,9 +216,6 @@ const Page = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                       {item.phonenumber}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.role}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 flex space-x-2">
                       <button
@@ -276,21 +267,20 @@ const Page = () => {
           </div>
         </div>
 
-        {/* Add User Modal */}
+        {/* Add Client Modal */}
         <Transition appear show={isAddModalOpen} as={Fragment}>
           <Dialog as="div" open={isAddModalOpen} onClose={handleCloseAddModal}>
             <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Add User
+                  Add Client
                 </Dialog.Title>
                 <Formik
                   initialValues={{
                     name: "",
                     email: "",
                     phonenumber: "",
-                    role: "",
                   }}
                   validationSchema={validationSchema}
                   onSubmit={handleAddSubmit}
@@ -354,30 +344,6 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
-                        <label
-                          htmlFor="role"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Role
-                        </label>
-                        <Field
-                          as="select"
-                          id="role"
-                          name="role"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Select a role</option>
-                          <option value="teamlead">Team Lead</option>
-                          <option value="manager">Manager</option>
-                          <option value="employee">Employee</option>
-                        </Field>
-                        <ErrorMessage
-                          name="role"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"
@@ -406,7 +372,7 @@ const Page = () => {
           </Dialog>
         </Transition>
 
-        {/* Edit User Modal */}
+        {/* Edit Client Modal */}
         <Transition appear show={isEditModalOpen} as={Fragment}>
           <Dialog
             as="div"
@@ -417,7 +383,7 @@ const Page = () => {
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Edit User
+                  Edit Client
                 </Dialog.Title>
                 <Formik
                   initialValues={
@@ -425,7 +391,6 @@ const Page = () => {
                       name: "",
                       email: "",
                       phonenumber: "",
-                      role: "",
                     }
                   }
                   validationSchema={validationSchema}
@@ -491,30 +456,6 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
-                        <label
-                          htmlFor="role"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Role
-                        </label>
-                        <Field
-                          as="select"
-                          id="role"
-                          name="role"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        >
-                          <option value="">Select a role</option>
-                          <option value="teamlead">Team Lead</option>
-                          <option value="manager">Manager</option>
-                          <option value="employee">Employee</option>
-                        </Field>
-                        <ErrorMessage
-                          name="role"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"
@@ -557,7 +498,7 @@ const Page = () => {
                   Confirm Delete
                 </Dialog.Title>
                 <p className="mb-4 text-gray-600">
-                  Are you sure you want to delete this user?
+                  Are you sure you want to delete this client?
                 </p>
                 <div className="flex justify-end space-x-2">
                   <button

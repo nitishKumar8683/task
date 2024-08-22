@@ -19,8 +19,8 @@ export const PUT = async (req, { params }) => {
     try {
         const formData = await req.formData();
         const image = formData.get("image");
-        const firstName = formData.get("firstName");
-        const lastName = formData.get("lastName");
+        const name = formData.get("name");
+        const email = formData.get("email");
         const phonenumber = formData.get("phonenumber");
 
         const currentUser = await User.findById(id);
@@ -39,8 +39,8 @@ export const PUT = async (req, { params }) => {
 
         const updatedUser = await User.findByIdAndUpdate(id, {
             image_url: imageUrl,
-            firstName,
-            lastName,
+            name,
+            email,
             phonenumber,
         }, { new: true });
 

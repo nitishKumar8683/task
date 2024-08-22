@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import User from "../../../../../models/userModel";
+import Client from "../../../../../models/clientModel";
 import { connect } from "../../../../../db/dbConfig"
 
 connect();
@@ -10,7 +10,7 @@ export async function PUT(request, { params }) {
     const { name, role, email, phonenumber } = reqBody;
     
     try {
-        const updatedUser = await User.findByIdAndUpdate(id, {
+        const updatedUser = await Client.findByIdAndUpdate(id, {
             name, role, email, phonenumber
         });
 

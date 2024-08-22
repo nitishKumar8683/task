@@ -12,8 +12,11 @@ import {
   MenuItem,
   CssBaseline,
   Toolbar,
+  Collapse,
   AppBar,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import MenuIcon from "@mui/icons-material/Menu";
 import CloseIcon from "@mui/icons-material/Close";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
@@ -24,6 +27,7 @@ import { useRouter } from "next/navigation";
 import { BeatLoader } from "react-spinners";
 
 const Home = ({ children }) => {
+  const [openMaster, setOpenMaster] = useState(false);
   const [open, setOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const router = useRouter();
@@ -31,6 +35,10 @@ const Home = ({ children }) => {
   const { userAPIData, isLoading, error } = useSelector(
     (state) => state.user || {}
   );
+
+   const handleClickMaster = () => {
+     setOpenMaster(!openMaster);
+   };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -93,25 +101,48 @@ const Home = ({ children }) => {
         </div>
       </Link>
       <Divider />
-      <List className="mt-4">
-        {role === "admin" && (
-          <>
-            <Link href="/dashboard/user">
+      <div
+        role="presentation"
+        className="flex flex-col h-full p-4 bg-gray-800 text-white"
+      >
+        <List className="mt-4">
+          {role === "admin" && (
+            <>
+              <ListItem button onClick={handleClickMaster}>
+                <ListItemText primary="Master" />
+                {openMaster ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </ListItem>
+              <Collapse in={openMaster} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  <Link href="/dashboard/client" passHref>
+                    <ListItem button className="pl-8">
+                      <ListItemText primary="Client" />
+                    </ListItem>
+                  </Link>
+                  <Link href="/dashboard/project" passHref>
+                    <ListItem button className="pl-8">
+                      <ListItemText primary="Project" />
+                    </ListItem>
+                  </Link>
+                </List>
+              </Collapse>
+              <Divider />
+              <Link href="/dashboard/user">
+                <ListItem button>
+                  <ListItemText primary="User" />
+                </ListItem>
+              </Link>
+            </>
+          )}
+          {role === "manager" && (
+            <Link href="/dashboard/request-user" passHref>
               <ListItem button>
-                <ListItemText primary="User" />
+                <ListItemText primary="Task Request" />
               </ListItem>
             </Link>
-            {/* <ListItem button component="a" href="/dashboard/task">
-              <ListItemText primary="Task" />
-            </ListItem> */}
-          </>
-        )}
-        {role === "manager" && (
-          <ListItem button component="a" href="/dashboard/request-user">
-            <ListItemText primary="Task Request" />
-          </ListItem>
-        )}
-      </List>
+          )}
+        </List>
+      </div>
     </div>
   );
 

@@ -1,17 +1,10 @@
 import mongoose from "mongoose";
 
-const userSchema = new mongoose.Schema({
+const clientSchema = new mongoose.Schema({
     name: {
         type: String,
     },
     email: {
-        type: String,
-    },
-    role: {
-        type: String,
-        default: "",
-    },
-    password: {
         type: String,
     },
     isDelete: {
@@ -36,6 +29,6 @@ const userSchema = new mongoose.Schema({
     },
 });
 
-const User = mongoose.models.users || mongoose.model("users", userSchema);
+const Client = mongoose.models.clients || mongoose.model("clients", clientSchema);
 
-export default User;
+export default Client;

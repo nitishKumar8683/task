@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import User from "../../../../../models/userModel";
+import Project from "../../../../../models/projectModel";
 import { connect } from "../../../../../db/dbConfig"
 
 connect();
@@ -7,11 +7,11 @@ connect();
 export async function PUT(request, { params }) {
     const id = params.id;
     const reqBody = await request.json();
-    const { name, role, email, phonenumber } = reqBody;
+    const { name } = reqBody;
     
     try {
-        const updatedUser = await User.findByIdAndUpdate(id, {
-            name, role, email, phonenumber
+        const updatedUser = await Project.findByIdAndUpdate(id, {
+            name
         });
 
         if (!updatedUser) {

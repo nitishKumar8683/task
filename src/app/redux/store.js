@@ -3,6 +3,7 @@ import userReducer from './slice';
 import userAllReducer from './user/userSlice'; 
 import clientAllReducer from './client/clientSlice';
 import projectAllReducer from './project/projectSlice';
+import TaskWorkAllReducer from './taskwork/taskworkSlice'
 
 const makeStore = () => {
     return configureStore({
@@ -10,7 +11,8 @@ const makeStore = () => {
             user: userReducer,       
             userAll: userAllReducer, 
             clientAll: clientAllReducer,
-            projectAll: projectAllReducer
+            projectAll: projectAllReducer,
+            taskworkAll : TaskWorkAllReducer
         },
     });
 };

@@ -2,9 +2,11 @@
 import React, { useEffect, useState, Fragment } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchUserData,
+  fetchClientData,
   clearUserData,
-} from "../../../app/redux/user/userSlice";
+} from "../../../app/redux/client/clientSlice";
+import { fetchProjectData } from "../../../app/redux/project/projectSlice";
+import { fetchApiUsers } from "../../../app/redux/slice";
 import DefaultPage from "../../../components/DefaultPage/DefaultPage";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Dialog, Transition } from "@headlessui/react";
@@ -17,6 +19,7 @@ import ClipLoader from "react-spinners/ClipLoader";
 import { PuffLoader } from "react-spinners";
 import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
+import Select from "react-select";
 
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,17 +34,45 @@ const Page = () => {
   const itemsPerPage = 5;
 
   const dispatch = useDispatch();
-  const { userAllAPIData, isLoading, error } = useSelector(
-    (state) => state.userAll
+  const { clientAllAPIData, isLoading, error } = useSelector(
+    (state) => state.clientAll
   );
 
-  useEffect(() => {
-    dispatch(fetchUserData());
+  const { projectAllAPIData } = useSelector(
+    (state) => state.projectAll
+  );
 
-    return () => {
-      dispatch(clearUserData());
-    };
+  const {
+    userAPIData = [],
+  } = useSelector((state) => state.user || {});
+
+  useEffect(() => {
+    dispatch(fetchClientData());
   }, [dispatch]);
+
+    useEffect(() => {
+      dispatch(fetchProjectData());
+    }, [dispatch]);
+
+    useEffect(() => {
+      dispatch(fetchApiUsers());
+    }, [dispatch]);
+
+    console.log("Me Data:", userAPIData);
+
+  const clientOptions = clientAllAPIData
+    ? clientAllAPIData.map((client) => ({
+        value: client.name,
+        label: client.name,
+      }))
+    : [];
+
+    const projectOptions = projectAllAPIData
+      ? projectAllAPIData.map((project) => ({
+          value: project.name,
+          label: project.name,
+        }))
+      : [];
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
   const handleCloseAddModal = () => setIsAddModalOpen(false);
@@ -59,31 +90,51 @@ const Page = () => {
   const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
 
   const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required"),
-    email: Yup.string()
-      .email("Invalid email address")
-      .required("Email is required"),
-    phonenumber: Yup.string()
-      .matches(/^[0-9]{10}$/, "Phone number must be exactly 10 digits")
-      .required("Phone number is required"),
-    role: Yup.string().required("Role is required"),
+    client: Yup.string().required("Client Name is required"),
+    project: Yup.string().required("Project Name is required"),
+    task: Yup.string().required("Task is required"),
+    time: Yup.string().required("Time is required"),
+    status: Yup.string().required("Status is required"),
   });
 
-  const handleAddSubmit = async (values, { resetForm }) => {
-    setIsSubmitting(true);
-    try {
-      const response = await axios.post("/api/users/register", values);
-      toast.success("User added successfully!");
-      resetForm();
-      handleCloseAddModal();
-      dispatch(fetchUserData());
-    } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to add user.");
-    } finally {
-      setIsSubmitting(false);
+const parseTime = (input) => {
+  const [hours, minutes] = input.split(".").map(Number);
+  const totalHours = hours || 0;
+  const totalMinutes = (minutes || 0) * 60; 
+  const totalMinutesValue = totalHours * 60 + totalMinutes;
+  const formattedHours = Math.floor(totalMinutesValue / 60);
+  const formattedMinutes = totalMinutesValue % 60;
+  return `${formattedHours}:${formattedMinutes.toString().padStart(2, "0")}`;
+};
+
+
+ const handleAddSubmit = async (values, { resetForm }) => {
+   setIsSubmitting(true);
+   try {
+     const userId = userAPIData._id; 
+     console.log(userId);
+    if (!userId) {
+      throw new Error("User ID not found");
     }
-  };
+    const formattedTime = parseTime(values.time);
+    const updatedValues = { ...values, userId, time: formattedTime };
+     const response = await axios.post(
+       "/api/worktask/createWorkTask",
+       updatedValues
+     );
+     console.log(response);
+     toast.success(response.data.message)
+     resetForm();
+     handleCloseAddModal();
+    // dispatch(fetchUserData());
+   } catch (error) {
+     console.error("Error submitting form:", error);
+     toast.error("Failed to add task.");
+   } finally {
+     setIsSubmitting(false);
+   }
+ };
+
 
   const handleEditSubmit = async (values) => {
     setIsSubmitting(true);
@@ -127,12 +178,10 @@ const Page = () => {
     }
   };
 
-  const filteredData = userAllAPIData
-    ? userAllAPIData.filter(
+  const filteredData = clientAllAPIData
+    ? clientAllAPIData.filter(
         (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.role.toLowerCase().includes(searchTerm.toLowerCase())
+          item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
 
@@ -266,125 +315,157 @@ const Page = () => {
 
         {/* Add User Modal */}
         <Transition appear show={isAddModalOpen} as={Fragment}>
-          <Dialog as="div" open={isAddModalOpen} onClose={handleCloseAddModal} className="relative z-10">
+          <Dialog
+            as="div"
+            open={isAddModalOpen}
+            onClose={handleCloseAddModal}
+            className="relative z-10"
+          >
             <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
-              <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full overflow-auto">
+              <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg h-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
                   Add Task Work
                 </Dialog.Title>
                 <Formik
                   initialValues={{
-                    name: "",
-                    email: "",
-                    phonenumber: "",
-                    role: "",
+                    client: "",
+                    project: "",
+                    task: "",
+                    time: "",
+                    status: "",
                   }}
                   validationSchema={validationSchema}
                   onSubmit={handleAddSubmit}
                 >
-                  {({ errors, touched }) => (
+                  {({
+                    values,
+                    errors,
+                    touched,
+                    setFieldValue,
+                    setFieldTouched,
+                    isSubmitting,
+                  }) => (
                     <Form className="space-y-4">
                       <div>
-                        <label
-                          htmlFor="name"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Client Name
-                        </label>
-                        <Field
-                          type="text"
-                          id="name"
-                          name="name"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        <label htmlFor="client">Client</label>
+                        <Select
+                          name="client"
+                          options={clientOptions}
+                          value={
+                            clientOptions.find(
+                              (option) => option.value === values.client
+                            ) || null
+                          }
+                          onChange={(option) =>
+                            setFieldValue("client", option ? option.value : "")
+                          }
+                          onBlur={() => setFieldTouched("client", true)}
                         />
                         <ErrorMessage
-                          name="name"
+                          name="client"
                           component="div"
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
+
+                      <div className="mb-4">
                         <label
-                          htmlFor="email"
+                          htmlFor="project"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Project Name
                         </label>
-                        <Field
-                          type="email"
-                          id="email"
-                          name="email"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        <Select
+                          name="project"
+                          options={projectOptions}
+                          value={
+                            projectOptions.find(
+                              (option) => option.value === values.project
+                            ) || null
+                          }
+                          onChange={(selectedOption) =>
+                            setFieldValue(
+                              "project",
+                              selectedOption ? selectedOption.value : ""
+                            )
+                          }
+                          onBlur={() => setFieldTouched("project", true)}
+                          placeholder="Select a project"
                         />
                         <ErrorMessage
-                          name="email"
+                          name="project"
                           component="div"
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
+
+                      <div className="mb-4">
                         <label
-                          htmlFor="phonenumber"
+                          htmlFor="task"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Task
                         </label>
                         <Field
-                          type="text"
-                          id="phonenumber"
-                          name="phonenumber"
+                          as="textarea"
+                          id="task"
+                          name="task"
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          rows="3" 
                         />
                         <ErrorMessage
-                          name="phonenumber"
+                          name="task"
                           component="div"
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
+
+                      <div className="mb-4">
                         <label
-                          htmlFor="phonenumber"
+                          htmlFor="time"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Time
                         </label>
                         <Field
                           type="text"
-                          id="phonenumber"
-                          name="phonenumber"
+                          id="time"
+                          name="time"
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         <ErrorMessage
-                          name="phonenumber"
+                          name="time"
                           component="div"
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      <div>
+
+                      <div className="mb-4">
                         <label
-                          htmlFor="role"
+                          htmlFor="status"
                           className="block text-sm font-medium text-gray-700"
                         >
                           Status
                         </label>
                         <Field
                           as="select"
-                          id="role"
-                          name="role"
+                          id="status"
+                          name="status"
                           className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                           <option value="">Select a status</option>
                           <option value="completed">Completed</option>
                           <option value="wip">Work In Progress</option>
-                          <option value="Aborted">Aborted</option>
+                          <option value="aborted">Aborted</option>
                         </Field>
                         <ErrorMessage
-                          name="role"
+                          name="status"
                           component="div"
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
+
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"

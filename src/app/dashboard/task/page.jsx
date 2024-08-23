@@ -11,7 +11,7 @@ import {
   fetchTaskWorkData,
   clearTaskWorkData,
 } from "../../../app/redux/taskwork/taskworkSlice";
-import {fetchUserData} from '../../../app/redux/user/userSlice'
+import { fetchUserData } from "../../../app/redux/user/userSlice";
 import DefaultPage from "../../../components/DefaultPage/DefaultPage";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { Dialog, Transition } from "@headlessui/react";
@@ -36,6 +36,8 @@ const Page = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
@@ -45,7 +47,6 @@ const Page = () => {
   const userAllAPIData = useSelector(
     (state) => state.userAll?.userAllAPIData || []
   );
-
 
   const { taskworkAllAPIData, isLoading, error } = useSelector(
     (state) => state.taskworkAll
@@ -77,28 +78,28 @@ const Page = () => {
       }))
     : [];
 
- const userOptions = Array.isArray(userAllAPIData)
-   ? userAllAPIData.map((user) => ({
-       value: user.email,
-       label: user.email,
-     }))
-   : [];
+  const userOptions = Array.isArray(userAllAPIData)
+    ? userAllAPIData.map((user) => ({
+        value: user.email,
+        label: user.email,
+      }))
+    : [];
 
-    console.log("your data", userOptions);
+  console.log("your data", userOptions);
 
-const handleClientSelect = (option) => {
-  setSelectedClient(option ? option.value : null);
-  setSearchTerm(""); // Clear search term
-  setIsClientDropdownOpen(false);
-};
+  const handleClientSelect = (option) => {
+    setSelectedClient(option ? option.value : null);
+    setSearchTerm(""); // Clear search term
+    setIsClientDropdownOpen(false);
+  };
 
- const handleClientSearch = (e) => {
-   setSearchTerm(e.target.value);
- };
+  const handleClientSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
 
- const handleStatusSearch = (e) => {
-   setSelectedStatus(e.target.value);
- };
+  const handleStatusSearch = (e) => {
+    setSelectedStatus(e.target.value);
+  };
 
   const statusOptions = [
     { value: "completed", label: "Completed" },
@@ -139,12 +140,20 @@ const handleClientSelect = (option) => {
     }
   };
 
-   const filteredClients = clientOptions.filter((option) =>
-     option.label.toLowerCase().includes((searchTerm || "").toLowerCase())
-   );
+  const filteredClients = clientOptions.filter((option) =>
+    option.label.toLowerCase().includes((searchTerm || "").toLowerCase())
+  );
 
-   const filteredStatuses = statusOptions.filter((option) =>
-     option.label.toLowerCase().includes((selectedStatus || "").toLowerCase())
+  const filteredStatuses = statusOptions.filter((option) =>
+    option.label.toLowerCase().includes((selectedStatus || "").toLowerCase())
+  );
+
+   const handleProjectSearch = (e) => {
+     setSelectedProject(e.target.value);
+   };
+
+   const filteredProjects = projectOptions.filter((option) =>
+     option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
    );
 
   const filteredData =
@@ -155,7 +164,11 @@ const handleClientSelect = (option) => {
       const isStatusMatch = selectedStatus
         ? item.status.toLowerCase() === selectedStatus.toLowerCase()
         : true;
-      return isClientMatch && isStatusMatch;
+      const isProjectMatch = selectedProject
+        ? item.project.toLowerCase() === selectedProject.toLowerCase()
+        : true;
+
+      return isClientMatch && isStatusMatch && isProjectMatch;
     }) || [];
 
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -180,25 +193,26 @@ const handleClientSelect = (option) => {
     setIsProjectDropdownOpen(false);
   };
 
-const sumTime = (timeArray) => {
-  let totalMinutes = 0;
+  
 
-  timeArray.forEach((time) => {
-    if (time) {
-      const [hours, minutes] = time.split(":").map(Number);
-      totalMinutes += (hours || 0) * 60 + (minutes || 0);
-    }
-  });
+  const sumTime = (timeArray) => {
+    let totalMinutes = 0;
 
-  const totalHours = Math.floor(totalMinutes / 60);
-  const remainingMinutes = totalMinutes % 60;
+    timeArray.forEach((time) => {
+      if (time) {
+        const [hours, minutes] = time.split(":").map(Number);
+        totalMinutes += (hours || 0) * 60 + (minutes || 0);
+      }
+    });
 
-  return `${totalHours}h ${remainingMinutes}m`;
-};
+    const totalHours = Math.floor(totalMinutes / 60);
+    const remainingMinutes = totalMinutes % 60;
 
-const timeArray = paginatedData.map((item) => item.time);
-const totalTime = sumTime(timeArray);
+    return `${totalHours}h ${remainingMinutes}m`;
+  };
 
+  const timeArray = paginatedData.map((item) => item.time);
+  const totalTime = sumTime(timeArray);
 
   return (
     <DefaultPage>
@@ -284,6 +298,40 @@ const totalTime = sumTime(timeArray);
             )}
           </div>
         </div>
+
+         <div className="relative">
+            <button
+              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Project <FaArrowRight className="ml-2" />
+            </button>
+            {isProjectDropdownOpen && (
+              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
+                <input
+                  type="text"
+                  placeholder="Search Projects"
+                  className="px-4 py-2 w-full border-b border-gray-300"
+                  onChange={handleProjectSearch}
+                  value={selectedProject}
+                />
+                <div className="max-h-60 overflow-y-auto">
+                  {filteredProjects.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => {
+                        setSelectedProject(option.label);
+                        setIsProjectDropdownOpen(false);
+                      }}
+                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
 
         <div className="relative overflow-x-auto bg-white shadow-lg rounded-lg">
           {isLoading && (

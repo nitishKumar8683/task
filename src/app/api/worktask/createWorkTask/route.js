@@ -7,16 +7,16 @@ connect();
 export async function POST(req) {
     try {
         const reqBody = await req.json();
-        const { client, project, status, task, time, userId } = reqBody;
+        const { client, project, task , assigned } = reqBody;
 
         const newTaskWork = new TaskWork({
             client,
             project,
-            status,
             task,
-            time,
+            assigned,
+            status : "",
+            time : "",
             isDelete: "",
-            userId
         });
         const savedTaskWork = await newTaskWork.save();
         console.log(savedTaskWork);

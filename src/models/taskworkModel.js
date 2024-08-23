@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
-const taskworkSchema = new mongoose.Schema({
-    userId: { 
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User', 
-        required: true, 
-    },
+const taskworkSchema = new mongoose.Schema({    
     client: {
         type: String,
     },
@@ -14,6 +9,7 @@ const taskworkSchema = new mongoose.Schema({
     },
     status: {
         type: String,
+        default: "",
     },
     task: {
         type: String,
@@ -25,6 +21,9 @@ const taskworkSchema = new mongoose.Schema({
     time: {
         type: String,
         default: "",
+    },
+    assigned : {
+        type: String,
     },
     createdAt: {
         type: Date,

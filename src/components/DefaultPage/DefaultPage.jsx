@@ -22,7 +22,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
- import { fetchApiUsers, logout } from "../../app/redux/slice";
+import { fetchApiUsers, logout } from "../../app/redux/slice";
 import { useRouter } from "next/navigation";
 import { BeatLoader } from "react-spinners";
 
@@ -36,9 +36,9 @@ const Home = ({ children }) => {
     (state) => state.user || {}
   );
 
-   const handleClickMaster = () => {
-     setOpenMaster(!openMaster);
-   };
+  const handleClickMaster = () => {
+    setOpenMaster(!openMaster);
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -75,26 +75,29 @@ const Home = ({ children }) => {
     }
   };
 
- 
-
   const Name = userAPIData?.name || "John";
   const role = userAPIData?.role || "user";
-  const image = userAPIData?.image_url || "user";
+  const image = userAPIData?.image_url || "";
 
-   const renderDashboardText = (role) => {
-     switch (role) {
-       case "admin":
-         return "Admin Dashboard";
-       case "teamlead":
-         return "TL Dashboard";
-      //  case "manager":
-      //    return "Manager Dashboard";
-       case "employee":
-         return "Employee Dashboard";
-       default:
-         return "Dashboard"; 
-     }
-   };
+  // Utility function to get initials from the name
+  const getInitials = (name) => {
+    const names = name.split(" ");
+    if (names.length === 1) return names[0].charAt(0).toUpperCase();
+    return names[0].charAt(0).toUpperCase() + names[1].charAt(0).toUpperCase();
+  };
+
+  const renderDashboardText = (role) => {
+    switch (role) {
+      case "admin":
+        return "Admin Dashboard";
+      case "teamlead":
+        return "TL Dashboard";
+      case "employee":
+        return "Employee Dashboard";
+      default:
+        return "Dashboard";
+    }
+  };
 
   const sidebarContent = (
     <div
@@ -108,7 +111,9 @@ const Home = ({ children }) => {
       </div>
       <Link href="/dashboard">
         <div className="flex items-center mb-4">
-          <Avatar src={image} alt="Profile" className="mr-4" />
+          <Avatar src={image} alt="Profile" className="mr-4">
+            {!image && getInitials(Name)}
+          </Avatar>
           <div>
             <h2 className="text-lg font-bold">{renderDashboardText(role)}</h2>
             <p className="text-sm">{Name}</p>
@@ -145,6 +150,11 @@ const Home = ({ children }) => {
               <Link href="/dashboard/user">
                 <ListItem button>
                   <ListItemText primary="Employees" />
+                </ListItem>
+              </Link>
+              <Link href="/dashboard/task">
+                <ListItem button>
+                  <ListItemText primary="Assign Task" />
                 </ListItem>
               </Link>
             </>
@@ -185,9 +195,11 @@ const Home = ({ children }) => {
                 className="flex items-center cursor-pointer"
                 onClick={handleProfileMenuOpen}
               >
-                <Avatar src={image} alt="Profile" />
+                <Avatar src={image} alt="Profile">
+                  {!image && getInitials(Name)}
+                </Avatar>
                 <span className="text-white ml-2">{Name}</span>
-                <ArrowDropDownIcon className="text-white ml-1" />{" "}
+                <ArrowDropDownIcon className="text-white ml-1" />
               </div>
             )}
             <Menu

@@ -1,505 +1,194 @@
 "use client";
-import React, { useEffect, useState, Fragment } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
-  fetchClientData,
-  clearUserData,
-} from "../../../app/redux/client/clientSlice";
-import { fetchProjectData } from "../../../app/redux/project/projectSlice";
-import { fetchApiUsers } from "../../../app/redux/slice";
-import { fetchTaskWorkData, clearTaskWorkData } from "../../../app/redux/taskwork/taskworkSlice";
-import DefaultPage from "../../../components/DefaultPage/DefaultPage";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+  fetchTaskData,
+  clearTaskData,
+} from "../../../app/redux/task/taskSlice";
 import { Dialog, Transition } from "@headlessui/react";
-import { Formik, Field, Form, ErrorMessage } from "formik";
-import * as Yup from "yup";
-import axios from "axios";
+import { FaEdit } from "react-icons/fa";
+import { ClipLoader } from "react-spinners";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import ClipLoader from "react-spinners/ClipLoader";
-import { PuffLoader } from "react-spinners";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
-import { FaUserCircle } from "react-icons/fa";
-import Select from "react-select";
+import axios from "axios";
+import * as Yup from "yup";
+import { Formik, Field, Form, ErrorMessage } from "formik";
+import DefaultPage from "../../../components/DefaultPage/DefaultPage";
 
 const Page = () => {
-   const [searchTerm, setSearchTerm] = useState("");
-   const [selectedClient, setSelectedClient] = useState(null);
-   const [selectedStatus, setSelectedStatus] = useState(null);
-   const [isClientDropdownOpen, setIsClientDropdownOpen] = useState(false);
-   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-   const [currentPage, setCurrentPage] = useState(1);
-   const itemsPerPage = 5;
-
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const dispatch = useDispatch();
-  const { clientAllAPIData } = useSelector((state) => state.clientAll);
-
-  const { projectAllAPIData } = useSelector((state) => state.projectAll);
-
-  const { userAPIData = [] } = useSelector((state) => state.user || {});
-
-  const { taskworkAllAPIData, isLoading, error } = useSelector(
-    (state) => state.taskworkAll
-  );
+  const { taskData, isLoading, error } = useSelector((state) => state.task);
 
   useEffect(() => {
-    dispatch(fetchTaskWorkData());
+    dispatch(fetchTaskData());
     return () => {
-      dispatch(clearTaskWorkData());
+      dispatch(clearTaskData());
     };
   }, [dispatch]);
 
-  useEffect(() => {
-    dispatch(fetchClientData());
-  }, [dispatch]);
+  const handleOpenUpdateModal = (task) => {
+    setSelectedTask(task);
+    setIsUpdateModalOpen(true);
+  };
 
-  useEffect(() => {
-    dispatch(fetchProjectData());
-  }, [dispatch]);
-
-  useEffect(() => {
-    dispatch(fetchApiUsers());
-  }, [dispatch]);
-
-  const clientOptions = clientAllAPIData
-    ? clientAllAPIData.map((client) => ({
-        value: client.name,
-        label: client.name,
-      }))
-    : [];
-
-    const handleClientSearch = (e) => {
-      setSelectedClient(e.target.value);
-      setSearchTerm(e.target.value); 
-    };
-
-    const handleStatusSearch = (e) => {
-      setSelectedStatus(e.target.value);
-    };
-
-     const statusOptions = [
-       { value: "completed", label: "Completed" },
-       { value: "wip", label: "Work In Progress" },
-       { value: "aborted", label: "Aborted" },
-     ];
-
-  const projectOptions = projectAllAPIData
-    ? projectAllAPIData.map((project) => ({
-        value: project.name,
-        label: project.name,
-      }))
-    : [];
-
-  const handleOpenAddModal = () => setIsAddModalOpen(true);
-  const handleCloseAddModal = () => setIsAddModalOpen(false);
-
+  const handleCloseUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setSelectedTask(null);
+  };
 
   const validationSchema = Yup.object({
-    client: Yup.string().required("Client Name is required"),
-    project: Yup.string().required("Project Name is required"),
-    task: Yup.string().required("Task is required"),
     time: Yup.string().required("Time is required"),
     status: Yup.string().required("Status is required"),
   });
 
-const parseTime = (input) => {
-  if (!input || isNaN(input)) return "00:00"; 
-  const [hoursPart, decimalPart] = input.split(".").map(Number);
-
-  const hours = hoursPart || 0;
-  const decimal = decimalPart || 0;
-  const minutesFromDecimal = (decimal * 60) / 10;
-  const totalMinutes = hours * 60 + minutesFromDecimal;
-  const formattedHours = Math.floor(totalMinutes / 60);
-  const formattedMinutes = totalMinutes % 60;
-
-  return `${formattedHours}:${formattedMinutes.toString().padStart(2, "0")}`;
-};
-
-
-
-
-
-
-  const handleAddSubmit = async (values, { resetForm }) => {
+  const handleUpdateSubmit = async (values, { resetForm }) => {
     setIsSubmitting(true);
     try {
-      const userId = userAPIData._id;
-      console.log(userId);
-      if (!userId) {
-        throw new Error("User ID not found");
-      }
-      const formattedTime = parseTime(values.time);
-      const updatedValues = { ...values, userId, time: formattedTime };
-      const response = await axios.post(
-        "/api/worktask/createWorkTask",
+      const updatedValues = { ...values, id: selectedTask._id };
+      const response = await axios.put(
+        "/api/worktask/updateTaskByEmployee", // Ensure this matches your API endpoint
         updatedValues
       );
-      console.log(response);
       toast.success(response.data.message);
       resetForm();
-      handleCloseAddModal();
-      dispatch(fetchTaskWorkData());
+      handleCloseUpdateModal();
+      dispatch(fetchTaskData()); // Refresh task data after update
     } catch (error) {
-      console.error("Error submitting form:", error);
-      toast.error("Failed to add task.");
+      toast.error("Failed to update task.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
-
-  const filteredClients = clientOptions.filter((option) =>
-    option.label.toLowerCase().includes((searchTerm || "").toLowerCase())
-  );
-
-  const filteredStatuses = statusOptions.filter((option) =>
-    option.label.toLowerCase().includes((selectedStatus || "").toLowerCase())
-  );
-
-  const filteredData =
-    taskworkAllAPIData?.filter((item) => {
-      const isClientMatch = selectedClient
-        ? item.client.toLowerCase() === selectedClient.toLowerCase()
-        : true;
-      const isStatusMatch = selectedStatus
-        ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-        : true;
-      return isClientMatch && isStatusMatch;
-    }) || [];
-
-
-
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  // const paginatedData = taskworkAllAPIData?.slice(startIndex, endIndex) || [];
-    const paginatedData = filteredData.slice(startIndex, endIndex);
-
-  console.log("Paginated Data:", paginatedData);
-
-  const handlePageChange = (page) => {
-    if (
-      page < 1 ||
-      page > Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
-    )
-      return;
-    setCurrentPage(page);
-  };
-
- const formatTime = (time) => {
-   const [hours, minutes] = time.split(":");
-   return `${parseInt(hours, 10)}h ${parseInt(minutes, 10)}m`;
- };
-
   return (
     <DefaultPage>
       <div className="p-6 bg-gray-50 min-h-screen">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-extrabold text-gray-800 border-b-4 border-indigo-600 pb-2 mb-4">
-            Task Data
-          </h1>
-
-          <div className="flex justify-end">
-            <button
-              onClick={handleOpenAddModal}
-              className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              <FaPlus size={16} className="mr-2" />
-              Add Task Work
-            </button>
+        <h1 className="text-3xl font-extrabold text-gray-800 border-b-4 border-indigo-600 pb-2 mb-4">
+          Task Data
+        </h1>
+        {isLoading && (
+          <div className="flex items-center justify-center">
+            <ClipLoader size={50} color={"#123abc"} loading={isLoading} />
           </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="flex space-x-4 mb-6">
-          {/* Client Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Client <FaUserCircle className="ml-2" />
-            </button>
-            {isClientDropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <input
-                  type="text"
-                  placeholder="Search Clients"
-                  className="px-4 py-2 w-full border-b border-gray-300"
-                  onChange={handleClientSearch}
-                  value={searchTerm}
-                />
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredClients.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setSelectedClient(option.label);
-                        setIsClientDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Status Dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Status <FaArrowRight className="ml-2" />
-            </button>
-            {isStatusDropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <input
-                  type="text"
-                  placeholder="Search Status"
-                  className="px-4 py-2 w-full border-b border-gray-300"
-                  onChange={handleStatusSearch}
-                  value={selectedStatus}
-                />
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredStatuses.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setSelectedStatus(option.label);
-                        setIsStatusDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="relative overflow-x-auto bg-white shadow-lg rounded-lg">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
-              <ClipLoader size={50} color={"#123abc"} loading={isLoading} />
-            </div>
-          )}
-          {error && (
-            <div className="text-red-500 text-center mt-4">Error: {error}</div>
-          )}
-          {!isLoading && !error && (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Client Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Project Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Task
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="hover:bg-gray-50 transition duration-200"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.client}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.project}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
-                        {item.task}
-                      </td>
-
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {formatTime(item.time)}
-                      </td>
-                      <td
-                        className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
-                          item.status === "completed"
-                            ? "bg-green-500 text-white"
-                            : item.status === "wip"
-                            ? "bg-yellow-500 text-black"
-                            : item.status === "aborted"
-                            ? "bg-red-500 text-white"
-                            : "bg-gray-200 text-gray-800"
-                        }`}
-                      >
-                        {item.status === "wip"
-                          ? "Work In Progress"
-                          : item.status === "completed"
-                          ? "Completed"
-                          : item.status === "aborted"
-                          ? "Aborted"
-                          : item.status}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
+        )}
+        {error && (
+          <div className="text-red-500 text-center mt-4">Error: {error}</div>
+        )}
+        {!isLoading && !error && (
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Client Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Project Name
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Task
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {taskData.length > 0 ? (
+                taskData.map((item) => (
+                  <tr
+                    key={item._id}
+                    className="hover:bg-gray-50 transition duration-200"
+                  >
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {item.client}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {item.project}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
+                      {item.task}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      {item.time ? item.time : "N/A"}
+                    </td>
                     <td
-                      colSpan="5"
-                      className="px-6 py-4 text-center text-gray-500"
+                      className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
+                        item.status === "completed"
+                          ? "bg-green-500 text-white"
+                          : item.status === "wip"
+                          ? "bg-yellow-500 text-black"
+                          : item.status === "aborted"
+                          ? "bg-red-500 text-white"
+                          : item.status === ""
+                          ? "bg-gray-200 text-gray-800"
+                          : "bg-gray-200 text-gray-800"
+                      }`}
                     >
-                      No results found
+                      {item.status === "wip"
+                        ? "Work In Progress"
+                        : item.status === "completed"
+                        ? "Completed"
+                        : item.status === "aborted"
+                        ? "Aborted"
+                        : item.status === ""
+                        ? "Pending"
+                        : item.status}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                      <button
+                        onClick={() => handleOpenUpdateModal(item)}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        <FaEdit size={20} />
+                      </button>
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          )}
-          <div className="flex justify-center items-center mt-4 space-x-4">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 bg-gray-500 text-white rounded-full shadow-md hover:bg-gray-600 focus:outline-none disabled:opacity-50"
-              aria-label="Previous Page"
-            >
-              <FaArrowLeft size={20} />
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={
-                currentPage ===
-                Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
-              }
-              className="p-2 bg-gray-500 text-white rounded-full shadow-md hover:bg-gray-600 focus:outline-none disabled:opacity-50"
-              aria-label="Next Page"
-            >
-              <FaArrowRight size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Add User Modal */}
-        <Transition appear show={isAddModalOpen} as={Fragment}>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
+                    No results found
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        )}
+        <Transition appear show={isUpdateModalOpen} as={Fragment}>
           <Dialog
             as="div"
-            open={isAddModalOpen}
-            onClose={handleCloseAddModal}
+            open={isUpdateModalOpen}
+            onClose={handleCloseUpdateModal}
             className="relative z-10"
           >
             <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
             <div className="fixed inset-0 flex items-center justify-center p-4">
               <Dialog.Panel className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg h-auto">
                 <Dialog.Title className="text-lg font-semibold text-gray-900 mb-4">
-                  Add Task Work
+                  Update Task Work
                 </Dialog.Title>
                 <Formik
                   initialValues={{
-                    client: "",
-                    project: "",
-                    task: "",
-                    time: "",
-                    status: "",
+                    time: selectedTask?.time || "",
+                    status: selectedTask?.status || "",
                   }}
                   validationSchema={validationSchema}
-                  onSubmit={handleAddSubmit}
+                  onSubmit={handleUpdateSubmit}
                 >
-                  {({
-                    values,
-                    errors,
-                    touched,
-                    setFieldValue,
-                    setFieldTouched,
-                    isSubmitting,
-                  }) => (
+                  {({ values, errors, touched, isSubmitting }) => (
                     <Form className="space-y-4">
-                      <div>
-                        <label htmlFor="client">Client</label>
-                        <Select
-                          name="client"
-                          options={clientOptions}
-                          value={
-                            clientOptions.find(
-                              (option) => option.value === values.client
-                            ) || null
-                          }
-                          onChange={(option) =>
-                            setFieldValue("client", option ? option.value : "")
-                          }
-                          onBlur={() => setFieldTouched("client", true)}
-                        />
-                        <ErrorMessage
-                          name="client"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
-
-                      <div className="mb-4">
-                        <label
-                          htmlFor="project"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Project Name
-                        </label>
-                        <Select
-                          name="project"
-                          options={projectOptions}
-                          value={
-                            projectOptions.find(
-                              (option) => option.value === values.project
-                            ) || null
-                          }
-                          onChange={(selectedOption) =>
-                            setFieldValue(
-                              "project",
-                              selectedOption ? selectedOption.value : ""
-                            )
-                          }
-                          onBlur={() => setFieldTouched("project", true)}
-                          placeholder="Select a project"
-                        />
-                        <ErrorMessage
-                          name="project"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
-
-                      <div className="mb-4">
-                        <label
-                          htmlFor="task"
-                          className="block text-sm font-medium text-gray-700"
-                        >
-                          Task
-                        </label>
-                        <Field
-                          as="textarea"
-                          id="task"
-                          name="task"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          rows="3"
-                        />
-                        <ErrorMessage
-                          name="task"
-                          component="div"
-                          className="text-red-600 text-sm mt-1"
-                        />
-                      </div>
-
                       <div className="mb-4">
                         <label
                           htmlFor="time"
@@ -508,18 +197,19 @@ const parseTime = (input) => {
                           Time
                         </label>
                         <Field
-                          type="text"
                           id="time"
                           name="time"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          type="text"
+                          className={`mt-1 block w-full p-2 border border-gray-300 rounded-md ${
+                            touched.time && errors.time ? "border-red-500" : ""
+                          }`}
                         />
                         <ErrorMessage
                           name="time"
                           component="div"
-                          className="text-red-600 text-sm mt-1"
+                          className="text-red-500 text-sm mt-1"
                         />
                       </div>
-
                       <div className="mb-4">
                         <label
                           htmlFor="status"
@@ -531,9 +221,13 @@ const parseTime = (input) => {
                           as="select"
                           id="status"
                           name="status"
-                          className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className={`mt-1 block w-full p-2 border border-gray-300 rounded-md ${
+                            touched.status && errors.status
+                              ? "border-red-500"
+                              : ""
+                          }`}
                         >
-                          <option value="">Select a status</option>
+                          <option value="">Select Status</option>
                           <option value="completed">Completed</option>
                           <option value="wip">Work In Progress</option>
                           <option value="aborted">Aborted</option>
@@ -541,27 +235,26 @@ const parseTime = (input) => {
                         <ErrorMessage
                           name="status"
                           component="div"
-                          className="text-red-600 text-sm mt-1"
+                          className="text-red-500 text-sm mt-1"
                         />
                       </div>
-
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"
-                          onClick={handleCloseAddModal}
-                          className="px-4 py-2 bg-gray-500 text-white rounded-lg shadow-md hover:bg-gray-600 focus:outline-none"
+                          onClick={handleCloseUpdateModal}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-gray-500 hover:bg-gray-600"
                         >
                           Cancel
                         </button>
                         <button
                           type="submit"
-                          className="px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none"
                           disabled={isSubmitting}
+                          className="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
                         >
                           {isSubmitting ? (
                             <ClipLoader size={20} color={"#ffffff"} />
                           ) : (
-                            "Submit"
+                            "Update"
                           )}
                         </button>
                       </div>
@@ -572,8 +265,8 @@ const parseTime = (input) => {
             </div>
           </Dialog>
         </Transition>
+        <ToastContainer />
       </div>
-      <ToastContainer />
     </DefaultPage>
   );
 };

@@ -41,13 +41,10 @@ const Page = () => {
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
-
   const { projectAllAPIData } = useSelector((state) => state.projectAll);
-
   const userAllAPIData = useSelector(
     (state) => state.userAll?.userAllAPIData || []
   );
-
   const { taskworkAllAPIData, isLoading, error } = useSelector(
     (state) => state.taskworkAll
   );
@@ -61,19 +58,13 @@ const Page = () => {
 
   useEffect(() => {
     dispatch(fetchClientData());
-  }, [dispatch]);
-
-  useEffect(() => {
     dispatch(fetchProjectData());
-  }, [dispatch]);
-
-  useEffect(() => {
     dispatch(fetchUserData());
   }, [dispatch]);
 
   const clientOptions = clientAllAPIData
     ? clientAllAPIData.map((client) => ({
-        value: client.name,
+        value: client._id,
         label: client.name,
       }))
     : [];
@@ -84,8 +75,6 @@ const Page = () => {
         label: user.email,
       }))
     : [];
-
-  console.log("your data", userOptions);
 
   const handleClientSelect = (option) => {
     setSelectedClient(option ? option.value : null);
@@ -109,13 +98,18 @@ const Page = () => {
 
   const projectOptions = projectAllAPIData
     ? projectAllAPIData.map((project) => ({
-        value: project.name,
+        value: project._id,
         label: project.name,
       }))
     : [];
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
-  const handleCloseAddModal = () => setIsAddModalOpen(false);
+  const handleCloseAddModal = () => {
+    setIsAddModalOpen(false);
+    setSelectedClient(null); 
+    setSelectedStatus(null); 
+    setSelectedProject(null); 
+  };
 
   const validationSchema = Yup.object({
     client: Yup.string().required("Client Name is required"),
@@ -148,13 +142,13 @@ const Page = () => {
     option.label.toLowerCase().includes((selectedStatus || "").toLowerCase())
   );
 
-   const handleProjectSearch = (e) => {
-     setSelectedProject(e.target.value);
-   };
+  const handleProjectSearch = (e) => {
+    setSelectedProject(e.target.value);
+  };
 
-   const filteredProjects = projectOptions.filter((option) =>
-     option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
-   );
+  const filteredProjects = projectOptions.filter((option) =>
+    option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
+  );
 
   const filteredData =
     taskworkAllAPIData?.filter((item) => {
@@ -188,12 +182,11 @@ const Page = () => {
     setSelectedStatus(option ? option.value : null);
     setIsStatusDropdownOpen(false);
   };
+
   const handleProjectSelect = (option) => {
     setSelectedProject(option ? option.value : null);
     setIsProjectDropdownOpen(false);
   };
-
-  
 
   const sumTime = (timeArray) => {
     let totalMinutes = 0;
@@ -236,150 +229,122 @@ const Page = () => {
         <div className="flex space-x-4 mb-6">
           {/* Client Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => setIsClientDropdownOpen(!isClientDropdownOpen)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Client <FaUserCircle className="ml-2" />
-            </button>
-            {isClientDropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <input
-                  type="text"
-                  placeholder="Search Clients"
-                  className="px-4 py-2 w-full border-b border-gray-300"
-                  onChange={handleClientSearch}
-                  value={searchTerm}
-                />
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredClients.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleClientSelect(option)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* <input
+              type="text"
+              value={searchTerm}
+              onChange={handleClientSearch}
+              placeholder="Search clients..."
+              className="border p-2 rounded"
+            /> */}
+            <Select
+              options={filteredClients}
+              onChange={handleClientSelect}
+              value={clientOptions.find(
+                (client) => client.value === selectedClient
+              )}
+              onMenuOpen={() => setIsClientDropdownOpen(true)}
+              onMenuClose={() => setIsClientDropdownOpen(false)}
+              isClearable
+              placeholder="Select client"
+            />
           </div>
 
           {/* Status Dropdown */}
           <div className="relative">
-            <button
-              onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Status <FaArrowRight className="ml-2" />
-            </button>
-            {isStatusDropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <input
-                  type="text"
-                  placeholder="Search Status"
-                  className="px-4 py-2 w-full border-b border-gray-300"
-                  onChange={handleStatusSearch}
-                  value={selectedStatus}
-                />
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredStatuses.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleStatusSelect(option)}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
+            {/* <input
+              type="text"
+              value={selectedStatus || ""}
+              onChange={handleStatusSearch}
+              placeholder="Search status..."
+              className="border p-2 rounded"
+            /> */}
+            <Select
+              options={statusOptions}
+              onChange={handleStatusSelect}
+              value={statusOptions.find(
+                (status) => status.value === selectedStatus
+              )}
+              onMenuOpen={() => setIsStatusDropdownOpen(true)}
+              onMenuClose={() => setIsStatusDropdownOpen(false)}
+              isClearable
+              placeholder="Select status"
+            />
+          </div>
+
+          {/* Project Dropdown */}
+          <div className="relative">
+            {/* <input
+              type="text"
+              value={selectedProject || ""}
+              onChange={handleProjectSearch}
+              placeholder="Search projects..."
+              className="border p-2 rounded"
+            /> */}
+            <Select
+              options={filteredProjects}
+              onChange={handleProjectSelect}
+              value={projectOptions.find(
+                (project) => project.value === selectedProject
+              )}
+              onMenuOpen={() => setIsProjectDropdownOpen(true)}
+              onMenuClose={() => setIsProjectDropdownOpen(false)}
+              isClearable
+              placeholder="Select project"
+            />
           </div>
         </div>
 
-         <div className="relative">
-            <button
-              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)} 
-              className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
-            >
-              Project <FaArrowRight className="ml-2" />
-            </button>
-            {isProjectDropdownOpen && (
-              <div className="absolute z-10 mt-2 bg-white border border-gray-300 rounded-lg shadow-lg">
-                <input
-                  type="text"
-                  placeholder="Search Projects"
-                  className="px-4 py-2 w-full border-b border-gray-300"
-                  onChange={handleProjectSearch}
-                  value={selectedProject}
-                />
-                <div className="max-h-60 overflow-y-auto">
-                  {filteredProjects.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => {
-                        setSelectedProject(option.label);
-                        setIsProjectDropdownOpen(false);
-                      }}
-                      className="w-full px-4 py-2 text-left hover:bg-gray-100"
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+        {/* Display the filtered and paginated data */}
+        <div className="mb-6">
+          {isLoading ? (
+            <ClipLoader size={50} color={"#123abc"} loading={isLoading} />
+          ) : error ? (
+            <p className="text-red-500">Error loading data</p>
+          ) : (
+            <div>
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    {/* Table Headers */}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Client
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Project
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Task
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Assigned To
+                    </th>
 
-        <div className="relative overflow-x-auto bg-white shadow-lg rounded-lg">
-          {isLoading && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 z-10">
-              <ClipLoader size={50} color={"#123abc"} loading={isLoading} />
-            </div>
-          )}
-          {error && (
-            <div className="text-red-500 text-center mt-4">Error: {error}</div>
-          )}
-          {!isLoading && !error && (
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Client Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Project Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Task
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((item) => (
-                    <tr
-                      key={item._id}
-                      className="hover:bg-gray-50 transition duration-200"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.client}
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Time
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Status
+                    </th>
+                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th> */}
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedData.map((item) => (
+                    <tr key={item.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {item.clientName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.project}
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.projectName}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {item.task}
                       </td>
-
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {item.assigned}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {item.time ? item.time : "N/A"} hrs
                       </td>
@@ -406,48 +371,50 @@ const Page = () => {
                           ? "Pending"
                           : item.status}
                       </td>
+
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button className="text-indigo-600 hover:text-indigo-900">
+                          <FaEdit />
+                        </button>
+                        <button className="text-red-600 hover:text-red-900 ml-2">
+                          <FaTrash />
+                        </button>
+                      </td> */}
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="5"
-                      className="px-6 py-4 text-center text-gray-500"
-                    >
-                      No results found
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  ))}
+                </tbody>
+              </table>
+              <div className="flex justify-between mt-4">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
+                >
+                  <FaArrowLeft />
+                </button>
+                <span className="text-gray-700">
+                  Page {currentPage} of{" "}
+                  {Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={
+                    currentPage ===
+                    Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
+                  }
+                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
+                >
+                  <FaArrowRight />
+                </button>
+              </div>
+              <p className="mt-4 text-lg font-semibold">
+                Total Time: {totalTime}
+              </p>
+            </div>
           )}
-          <div className="px-6 py-4 text-right text-lg font-medium text-gray-700">
-            <h1>Total Time: {totalTime}</h1>
-          </div>
-          <div className="flex justify-center items-center mt-4 space-x-4">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="p-2 bg-gray-500 text-white rounded-full shadow-md hover:bg-gray-600 focus:outline-none disabled:opacity-50"
-              aria-label="Previous Page"
-            >
-              <FaArrowLeft size={20} />
-            </button>
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={
-                currentPage ===
-                Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
-              }
-              className="p-2 bg-gray-500 text-white rounded-full shadow-md hover:bg-gray-600 focus:outline-none disabled:opacity-50"
-              aria-label="Next Page"
-            >
-              <FaArrowRight size={20} />
-            </button>
-          </div>
         </div>
 
-        {/* Add User Modal */}
+        {/* Add Task Modal */}
         <Transition appear show={isAddModalOpen} as={Fragment}>
           <Dialog
             as="div"
@@ -606,8 +573,9 @@ const Page = () => {
             </div>
           </Dialog>
         </Transition>
+
+        <ToastContainer />
       </div>
-      <ToastContainer />
     </DefaultPage>
   );
 };

@@ -17,7 +17,11 @@ export const fetchTaskWorkData = createAsyncThunk(
             }
             const data = await response.json();
             console.log("API Response Data:", data.taskworkData);
-            return data;
+            const taskworkData = Array.isArray(data.taskworkData) ? data.taskworkData : [];
+            const sortedData = taskworkData.sort((a, b) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            return sortedData
         } catch (error) {
             console.error("Error fetching taskwork data:", error);
             throw error;
@@ -43,7 +47,7 @@ const taskworkSlice = createSlice({
             })
             .addCase(fetchTaskWorkData.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.taskworkAllAPIData = action.payload.taskworkData; // Set the data directly
+                state.taskworkAllAPIData = action.payload; // Set the data directly
             })
             .addCase(fetchTaskWorkData.rejected, (state, action) => {
                 state.isLoading = false;

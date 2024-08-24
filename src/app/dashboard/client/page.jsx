@@ -185,7 +185,7 @@ const Page = () => {
             Client Data
           </h1>
 
-          <form onSubmit={handleSubmitUpload}>
+          {/* <form onSubmit={handleSubmitUpload}>
             <div>
               <label htmlFor="file">Upload File</label>
               <input
@@ -198,7 +198,7 @@ const Page = () => {
             <button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Submitting..." : "Upload File"}
             </button>
-          </form>
+          </form> */}
           <div className="flex justify-end">
             <button
               onClick={handleOpenAddModal}

@@ -16,8 +16,14 @@ export const fetchClientData = createAsyncThunk(
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
-            console.log("API Response Data:", data.clientData); 
-            return data;
+            console.log("API Response Data:", data.clientData);
+
+            // Sort data by 'createdAt' field in descending order
+            const sortedData = data.clientData.sort((a, b) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+
+            return { clientData: sortedData };
         } catch (error) {
             console.error("Error fetching user data:", error);
             throw error;

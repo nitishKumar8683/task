@@ -301,7 +301,7 @@ const Page = () => {
 
          <div className="relative">
             <button
-              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)}
+              onClick={() => setIsProjectDropdownOpen(!isProjectDropdownOpen)} 
               className="flex items-center px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500"
             >
               Project <FaArrowRight className="ml-2" />

@@ -28,6 +28,8 @@ const Page = () => {
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+ const [file, setFile] = useState(null);
+ const [name, setName] = useState("");
 
   const dispatch = useDispatch();
   const { clientAllAPIData, isLoading, error } = useSelector(
@@ -77,6 +79,39 @@ const Page = () => {
       setIsSubmitting(false);
     }
   };
+
+ const handleFileChange = (event) => {
+   setFile(event.target.files[0]);
+ };
+
+ const handleSubmitUpload = async (event) => {
+   event.preventDefault();
+   if (!file) return;
+
+   setIsSubmitting(true);
+
+   try {
+     const formData = new FormData();
+     formData.append("file", file);
+
+     const response = await axios.post("/api/client/uploadClient", formData, {
+       headers: {
+         "Content-Type": "multipart/form-data",
+       },
+     });
+
+     console.log(response.data);
+     toast.success("File uploaded and saved successfully!");
+     setFile(null); // Clear the file input
+   } catch (error) {
+     console.error("Error uploading file:", error);
+     toast.error("Failed to upload file.");
+   } finally {
+     setIsSubmitting(false);
+   }
+ };
+
+
 
   const handleEditSubmit = async (values) => {
     setIsSubmitting(true);
@@ -150,6 +185,20 @@ const Page = () => {
             Client Data
           </h1>
 
+          <form onSubmit={handleSubmitUpload}>
+            <div>
+              <label htmlFor="file">Upload File</label>
+              <input
+                id="file"
+                type="file"
+                onChange={handleFileChange}
+                required
+              />
+            </div>
+            <button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Upload File"}
+            </button>
+          </form>
           <div className="flex justify-end">
             <button
               onClick={handleOpenAddModal}
@@ -182,7 +231,7 @@ const Page = () => {
             <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                Client Name
+                  Client Name
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
                   Actions
@@ -286,7 +335,7 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      
+
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"
@@ -359,7 +408,7 @@ const Page = () => {
                           className="text-red-600 text-sm mt-1"
                         />
                       </div>
-                      
+
                       <div className="flex justify-end space-x-2">
                         <button
                           type="button"

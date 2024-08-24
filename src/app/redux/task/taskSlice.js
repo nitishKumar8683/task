@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // Async thunk to fetch task data by ID
 export const fetchTaskData = createAsyncThunk('task/fetchData', async () => {
-    const response = await axios.get('/api/worktask/getTaskById'); // Adjust API endpoint as needed
+    const response = await axios.post('/api/worktask/getTaskById');
     return response.data;
 });
 

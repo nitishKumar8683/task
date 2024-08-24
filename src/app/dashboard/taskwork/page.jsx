@@ -109,10 +109,10 @@ const Page = () => {
                     className="hover:bg-gray-50 transition duration-200"
                   >
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.client}
+                      {item.clientName}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.project}
+                      {item.projectName}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
                       {item.task}

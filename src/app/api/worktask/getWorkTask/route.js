@@ -6,7 +6,7 @@ import { connect } from "../../../../db/dbConfig";
 
 connect()
 
-export async function GET(req) {
+export async function POST(req) {
     try {
         const taskworkData = await TaskWork.find({ isDelete: { $ne: "1" } });
         const clientIds = [...new Set(taskworkData.map(t => t.client))];

@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
 const initialState = {
     taskworkAllAPIData: null,
@@ -11,17 +12,13 @@ export const fetchTaskWorkData = createAsyncThunk(
     'taskworkAll/fetchTaskWorkData',
     async () => {
         try {
-            const response = await fetch('/api/worktask/getWorkTask');
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            console.log("API Response Data:", data.taskworkData);
-            const taskworkData = Array.isArray(data.taskworkData) ? data.taskworkData : [];
+            const response = await axios.post('/api/worktask/getWorkTask');
+            console.log("API Response Data:", response.data.taskworkData);
+            const taskworkData = Array.isArray(response.data.taskworkData) ? response.data.taskworkData : [];
             const sortedData = taskworkData.sort((a, b) => {
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
-            return sortedData
+            return sortedData;
         } catch (error) {
             console.error("Error fetching taskwork data:", error);
             throw error;

@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import axios from 'axios';
 
 const initialState = {
     clientAllAPIData: null,
@@ -11,15 +12,12 @@ export const fetchClientData = createAsyncThunk(
     'clientAll/fetchClientData',
     async () => {
         try {
-            const response = await fetch('/api/client/getUser');
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const data = await response.json();
-            console.log("API Response Data:", data.clientData);
+            const response = await axios.post('/api/client/getUser');
+            console.log("API Response Data:", response.data.clientData);
 
-            // Sort data by 'createdAt' field in descending order
-            const sortedData = data.clientData.sort((a, b) => {
+            // Ensure data is an array and sort it
+            const clientData = Array.isArray(response.data.clientData) ? response.data.clientData : [];
+            const sortedData = clientData.sort((a, b) => {
                 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
             });
 
@@ -49,7 +47,7 @@ const clientSlice = createSlice({
             })
             .addCase(fetchClientData.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.clientAllAPIData = action.payload.clientData
+                state.clientAllAPIData = action.payload.clientData;
             })
             .addCase(fetchClientData.rejected, (state, action) => {
                 state.isLoading = false;

@@ -4,7 +4,7 @@ import { connect } from "../../../../db/dbConfig"
 
 connect()
 
-export async function GET(req) {
+export async function POST(req) {
     try {
         const clientData = await Client.find({
             isDelete: { $ne: "1" },

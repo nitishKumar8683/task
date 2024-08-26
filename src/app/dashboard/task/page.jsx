@@ -157,25 +157,39 @@ const Page = () => {
     option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
   );
 
-const filteredData =
-  taskworkAllAPIData?.filter((item) => {
-    const isClientMatch = selectedClient
-      ? item.client.toLowerCase() === selectedClient.toLowerCase()
-      : true;
-    const isStatusMatch = selectedStatus
-      ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-      : true;
-    const isProjectMatch = selectedProject
-      ? item.project.toLowerCase() === selectedProject.toLowerCase()
-      : true;
+const filteredData = (taskworkAllAPIData || []).filter((item) => {
+  // Check if item matches the selected client
+  const isClientMatch = selectedClient
+    ? item.client.toLowerCase() === selectedClient.toLowerCase()
+    : true;
 
-    const itemDate = new Date(item.createdAt);
-    const isDateInRange =
-      (!startDate || itemDate >= new Date(startDate)) &&
-      (!endDate || itemDate <= new Date(endDate));
+  // Check if item matches the selected status
+  const isStatusMatch = selectedStatus
+    ? item.status.toLowerCase() === selectedStatus.toLowerCase()
+    : true;
 
-    return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
-  }) || [];
+  // Check if item matches the selected project
+  const isProjectMatch = selectedProject
+    ? item.project.toLowerCase() === selectedProject.toLowerCase()
+    : true;
+
+  // Parse the item creation date
+  const itemDate = new Date(item.createdAt);
+
+  // Adjust end date to include the entire day
+  const adjustedEndDate = new Date(endDate);
+  adjustedEndDate.setHours(23, 59, 59, 999);
+
+  // Check if itemDate is within the specified date range
+  const isDateInRange =
+    (!startDate || itemDate >= new Date(startDate)) &&
+    (!endDate || itemDate <= adjustedEndDate);
+
+  // Return true if all conditions are met
+  return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
+});
+
+
 
 
 
@@ -339,7 +353,7 @@ const filteredData =
                 isClearable
                 placeholderText="Select date range"
                 className="border p-2 rounded w-full"
-                maxDate={currentDate} 
+                maxDate={currentDate}
               />
             </div>
           </div>
@@ -405,16 +419,16 @@ const filteredData =
                           </td>
                           <td>
                             <span
-                              className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
+                              className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md text-center inline-block ${
                                 item.status === "completed"
-                                  ? "bg-green-500 text-white"
+                                  ? "bg-green-500 text-white w-32"
                                   : item.status === "wip"
-                                  ? "bg-yellow-500 text-black"
+                                  ? "bg-orange-300 text-black w-32"
                                   : item.status === "aborted"
-                                  ? "bg-red-500 text-white"
+                                  ? "bg-red-500 text-white w-32"
                                   : item.status === ""
-                                  ? "bg-gray-200 text-gray-800"
-                                  : "bg-gray-200 text-gray-800"
+                                  ? "bg-gray-200 text-gray-800 w-32"
+                                  : "bg-gray-200 text-gray-800 w-32"
                               }`}
                             >
                               {item.status === "wip"

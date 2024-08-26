@@ -31,7 +31,7 @@ const taskworkSlice = createSlice({
     initialState,
     reducers: {
         clearTaskWorkData: (state) => {
-            state.taskworkAllAPIData = null; // Corrected property name
+            state.taskworkAllAPIData = null;
             state.isLoading = false;
             state.error = null;
         },
@@ -44,7 +44,7 @@ const taskworkSlice = createSlice({
             })
             .addCase(fetchTaskWorkData.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.taskworkAllAPIData = action.payload; // Set the data directly
+                state.taskworkAllAPIData = action.payload;
             })
             .addCase(fetchTaskWorkData.rejected, (state, action) => {
                 state.isLoading = false;

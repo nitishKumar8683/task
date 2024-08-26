@@ -8,14 +8,14 @@ export async function POST(req) {
     try {
         const reqBody = await req.json()
         const { name} = reqBody
-        console.log(name)
+        //console.log(name)
 
         const newClient = new Project({
             name,
             isDelete: "",
         })
         const savedClient = await newClient.save();
-        console.log(savedClient);
+        //console.log(savedClient);
 
         return NextResponse.json({
             message: "Project created successfully",

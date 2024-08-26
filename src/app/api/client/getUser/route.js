@@ -9,7 +9,7 @@ export async function POST(req) {
         const clientData = await Client.find({
             isDelete: { $ne: "1" },
         })
-        console.log(clientData);
+        //console.log(clientData);
         return NextResponse.json({
             message: "Client Data Retrieve Successfully",
             success: true,

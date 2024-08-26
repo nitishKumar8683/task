@@ -14,7 +14,7 @@ export async function POST(req) {
             isDelete: "",
         })
         const savedClient = await newClient.save();
-        console.log(savedClient);
+        //console.log(savedClient);
 
         return NextResponse.json({
             message: "User created successfully",

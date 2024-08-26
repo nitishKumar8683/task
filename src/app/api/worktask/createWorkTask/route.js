@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import TaskWork from "../../../../models/taskworkModel";
 import { connect } from "../../../../db/dbConfig";
 
+
 connect();
 
 export async function POST(req) {
@@ -19,7 +20,7 @@ export async function POST(req) {
             isDelete: "",
         });
         const savedTaskWork = await newTaskWork.save();
-        console.log(savedTaskWork);
+        //(savedTaskWork);
 
         return NextResponse.json({
             message: "Task Work created successfully",

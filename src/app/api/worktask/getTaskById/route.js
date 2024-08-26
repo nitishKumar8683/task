@@ -10,18 +10,20 @@ connect();
 export async function POST(req) {
     try {
         const user = await authenticate(req);
+        console.log('Authenticated user:', user);
+
 
         if (!user) {
             console.error('Authentication failed: User not authenticated');
             return NextResponse.json({ message: "User not authenticated" }, { status: 401 });
         }
 
-        console.log('Authenticated user:', user);
+        //console.log('Authenticated user:', user);
 
         // Fetch taskwork data for the authenticated user
         const taskworkData = await TaskWork.find({
             isDelete: { $ne: "1" },
-            assigned: user.email // Filter based on the user's email
+            assigned: user.id // Filter based on the user's email
         }).exec();
 
         // Extract unique client and project IDs

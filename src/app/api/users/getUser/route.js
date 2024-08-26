@@ -10,7 +10,7 @@ export async function GET(req) {
             role: { $ne: "admin" },
             isDelete: { $ne: "1" },
         }).select("-password")
-        console.log(usersData);
+        //console.log(usersData);
         return NextResponse.json({
             message: "User Retrieve Successfully",
             success: true,

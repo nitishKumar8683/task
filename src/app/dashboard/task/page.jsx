@@ -22,9 +22,11 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import ClipLoader from "react-spinners/ClipLoader";
 import { PuffLoader } from "react-spinners";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaDownload } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
 import Select from "react-select";
+import { CSVLink } from "react-csv";
+
 
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -38,6 +40,8 @@ const Page = () => {
   const itemsPerPage = 5;
   const [selectedProject, setSelectedProject] = useState(null);
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
@@ -71,14 +75,14 @@ const Page = () => {
 
   const userOptions = Array.isArray(userAllAPIData)
     ? userAllAPIData.map((user) => ({
-        value: user.email,
+        value: user._id,
         label: user.email,
       }))
     : [];
 
   const handleClientSelect = (option) => {
     setSelectedClient(option ? option.value : null);
-    setSearchTerm(""); // Clear search term
+    setSearchTerm(""); 
     setIsClientDropdownOpen(false);
   };
 
@@ -150,20 +154,28 @@ const Page = () => {
     option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
   );
 
-  const filteredData =
-    taskworkAllAPIData?.filter((item) => {
-      const isClientMatch = selectedClient
-        ? item.client.toLowerCase() === selectedClient.toLowerCase()
-        : true;
-      const isStatusMatch = selectedStatus
-        ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-        : true;
-      const isProjectMatch = selectedProject
-        ? item.project.toLowerCase() === selectedProject.toLowerCase()
-        : true;
+const filteredData =
+  taskworkAllAPIData?.filter((item) => {
+    const isClientMatch = selectedClient
+      ? item.client.toLowerCase() === selectedClient.toLowerCase()
+      : true;
+    const isStatusMatch = selectedStatus
+      ? item.status.toLowerCase() === selectedStatus.toLowerCase()
+      : true;
+    const isProjectMatch = selectedProject
+      ? item.project.toLowerCase() === selectedProject.toLowerCase()
+      : true;
 
-      return isClientMatch && isStatusMatch && isProjectMatch;
-    }) || [];
+    // Check if the createdAt date is within the range
+    const itemDate = new Date(item.createdAt); // Ensure 'createdAt' is in ISO format
+    const isDateInRange =
+      (!startDate || itemDate >= new Date(startDate)) &&
+      (!endDate || itemDate <= new Date(endDate));
+
+    return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
+  }) || [];
+
+
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -207,6 +219,38 @@ const Page = () => {
   const timeArray = paginatedData.map((item) => item.time);
   const totalTime = sumTime(timeArray);
 
+ const prepareExportData = () => {
+   const data = paginatedData.map((item) => ({
+     Client: item.clientName,
+     Project: item.projectName,
+     Task: item.task,
+     Assigned: `${item.assignedUserName} (${item.assignedUserEmail})`,
+     Time: item.time || "N/A",
+     Status:
+       item.status === "wip"
+         ? "Work In Progress"
+         : item.status === "completed"
+         ? "Completed"
+         : item.status === "aborted"
+         ? "Aborted"
+         : "Pending",
+   }));
+
+   // Add total time as an additional row
+   return [
+     ...data,
+     {
+       Client: "Total Time",
+       Project: "",
+       Task: "",
+       Assigned: "",
+       Time: totalTime,
+       Status: "",
+     },
+   ];
+ };
+ 
+ 
   return (
     <DefaultPage>
       <div className="p-6 bg-gray-50 min-h-screen">
@@ -215,7 +259,7 @@ const Page = () => {
             Task Data
           </h1>
 
-          <div className="flex justify-end">
+          <div className="flex items-center space-x-4">
             <button
               onClick={handleOpenAddModal}
               className="flex items-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -223,19 +267,20 @@ const Page = () => {
               <FaPlus size={16} className="mr-2" />
               Add New Task
             </button>
+            <CSVLink
+              data={prepareExportData()}
+              filename={"task-data.csv"}
+              className="flex items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+            >
+              <FaDownload size={16} className="mr-2" />
+              Download CSV
+            </CSVLink>
           </div>
         </div>
 
         <div className="flex space-x-4 mb-6">
           {/* Client Dropdown */}
           <div className="relative">
-            {/* <input
-              type="text"
-              value={searchTerm}
-              onChange={handleClientSearch}
-              placeholder="Search clients..."
-              className="border p-2 rounded"
-            /> */}
             <Select
               options={filteredClients}
               onChange={handleClientSelect}
@@ -251,13 +296,6 @@ const Page = () => {
 
           {/* Status Dropdown */}
           <div className="relative">
-            {/* <input
-              type="text"
-              value={selectedStatus || ""}
-              onChange={handleStatusSearch}
-              placeholder="Search status..."
-              className="border p-2 rounded"
-            /> */}
             <Select
               options={statusOptions}
               onChange={handleStatusSelect}
@@ -273,13 +311,6 @@ const Page = () => {
 
           {/* Project Dropdown */}
           <div className="relative">
-            {/* <input
-              type="text"
-              value={selectedProject || ""}
-              onChange={handleProjectSearch}
-              placeholder="Search projects..."
-              className="border p-2 rounded"
-            /> */}
             <Select
               options={filteredProjects}
               onChange={handleProjectSelect}
@@ -292,6 +323,38 @@ const Page = () => {
               placeholder="Select project"
             />
           </div>
+
+          {/* <div className="relative">
+            <label
+              htmlFor="startDate"
+              className="block text-sm font-medium text-gray-700"
+            >
+              Start Date
+            </label>
+            <input
+              type="date"
+              id="startDate"
+              value={startDate || ""}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="border p-2 rounded"
+            />
+          </div>
+
+          <div className="relative">
+            <label
+              htmlFor="endDate"
+              className="block text-sm font-medium text-gray-700"
+            >
+              End Date
+            </label>
+            <input
+              type="date"
+              id="endDate"
+              value={endDate || ""}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="border p-2 rounded"
+            />
+          </div> */}
         </div>
 
         {/* Display the filtered and paginated data */}
@@ -302,114 +365,115 @@ const Page = () => {
             <p className="text-red-500">Error loading data</p>
           ) : (
             <div>
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    {/* Table Headers */}
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Client
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Project
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Task
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Assigned To
-                    </th>
-
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Time
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    {/* <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th> */}
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedData.map((item) => (
-                    <tr key={item.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {item.clientName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.projectName}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.task}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {item.assigned}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.time ? item.time : "N/A"} hrs
-                      </td>
-                      <td
-                        className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
-                          item.status === "completed"
-                            ? "bg-green-500 text-white"
-                            : item.status === "wip"
-                            ? "bg-yellow-500 text-black"
-                            : item.status === "aborted"
-                            ? "bg-red-500 text-white"
-                            : item.status === ""
-                            ? "bg-gray-200 text-gray-800"
-                            : "bg-gray-200 text-gray-800"
-                        }`}
-                      >
-                        {item.status === "wip"
-                          ? "Work In Progress"
-                          : item.status === "completed"
-                          ? "Completed"
-                          : item.status === "aborted"
-                          ? "Aborted"
-                          : item.status === ""
-                          ? "Pending"
-                          : item.status}
-                      </td>
-
-                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <button className="text-indigo-600 hover:text-indigo-900">
-                          <FaEdit />
-                        </button>
-                        <button className="text-red-600 hover:text-red-900 ml-2">
-                          <FaTrash />
-                        </button>
-                      </td> */}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <div className="flex justify-between mt-4">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
-                >
-                  <FaArrowLeft />
-                </button>
-                <span className="text-gray-700">
-                  Page {currentPage} of{" "}
-                  {Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)}
-                </span>
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={
-                    currentPage ===
-                    Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
-                  }
-                  className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
-                >
-                  <FaArrowRight />
-                </button>
-              </div>
-              <p className="mt-4 text-lg font-semibold">
-                Total Time: {totalTime}
-              </p>
+              {paginatedData.length === 0 ? (
+                <p className="text-center text-gray-500 text-lg font-semibold mt-8">
+                  No records found
+                </p>
+              ) : (
+                <div>
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        {/* Table Headers */}
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Client
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Project
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Task
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Assigned To
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {paginatedData.map((item) => (
+                        <tr key={item.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {item.clientName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {item.projectName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {item.task}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {item.assignedUserName
+                              ? `${item.assignedUserName} (${item.assignedUserEmail})`
+                              : "Unknown User"}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {item.time ? item.time : "N/A"} hrs
+                          </td>
+                          <td
+                            className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
+                              item.status === "completed"
+                                ? "bg-green-500 text-white"
+                                : item.status === "wip"
+                                ? "bg-yellow-500 text-black"
+                                : item.status === "aborted"
+                                ? "bg-red-500 text-white"
+                                : item.status === ""
+                                ? "bg-gray-200 text-gray-800"
+                                : "bg-gray-200 text-gray-800"
+                            }`}
+                          >
+                            {item.status === "wip"
+                              ? "Work In Progress"
+                              : item.status === "completed"
+                              ? "Completed"
+                              : item.status === "aborted"
+                              ? "Aborted"
+                              : item.status === ""
+                              ? "Pending"
+                              : item.status}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="flex justify-between mt-4">
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
+                    >
+                      <FaArrowLeft />
+                    </button>
+                    <span className="text-gray-700">
+                      Page {currentPage} of{" "}
+                      {Math.ceil(
+                        (taskworkAllAPIData?.length || 0) / itemsPerPage
+                      )}
+                    </span>
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={
+                        currentPage ===
+                        Math.ceil(
+                          (taskworkAllAPIData?.length || 0) / itemsPerPage
+                        )
+                      }
+                      className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
+                    >
+                      <FaArrowRight />
+                    </button>
+                  </div>
+                  <p className="mt-4 text-lg font-semibold">
+                    Total Time: {totalTime}
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

@@ -26,6 +26,8 @@ import { FaArrowLeft, FaArrowRight, FaDownload } from "react-icons/fa";
 import { FaUserCircle } from "react-icons/fa";
 import Select from "react-select";
 import { CSVLink } from "react-csv";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 const Page = () => {
@@ -42,6 +44,7 @@ const Page = () => {
   const [isProjectDropdownOpen, setIsProjectDropdownOpen] = useState(false);
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
+  const currentDate = new Date();
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
@@ -166,8 +169,7 @@ const filteredData =
       ? item.project.toLowerCase() === selectedProject.toLowerCase()
       : true;
 
-    // Check if the createdAt date is within the range
-    const itemDate = new Date(item.createdAt); // Ensure 'createdAt' is in ISO format
+    const itemDate = new Date(item.createdAt);
     const isDateInRange =
       (!startDate || itemDate >= new Date(startDate)) &&
       (!endDate || itemDate <= new Date(endDate));
@@ -235,8 +237,6 @@ const filteredData =
          ? "Aborted"
          : "Pending",
    }));
-
-   // Add total time as an additional row
    return [
      ...data,
      {
@@ -278,7 +278,7 @@ const filteredData =
           </div>
         </div>
 
-        <div className="flex space-x-4 mb-6">
+        <div className="flex flex-wrap space-x-4 mb-6">
           {/* Client Dropdown */}
           <div className="relative">
             <Select
@@ -291,6 +291,20 @@ const filteredData =
               onMenuClose={() => setIsClientDropdownOpen(false)}
               isClearable
               placeholder="Select client"
+            />
+          </div>
+          {/* Project Dropdown */}
+          <div className="relative">
+            <Select
+              options={filteredProjects}
+              onChange={handleProjectSelect}
+              value={projectOptions.find(
+                (project) => project.value === selectedProject
+              )}
+              onMenuOpen={() => setIsProjectDropdownOpen(true)}
+              onMenuClose={() => setIsProjectDropdownOpen(false)}
+              isClearable
+              placeholder="Select project"
             />
           </div>
 
@@ -309,52 +323,26 @@ const filteredData =
             />
           </div>
 
-          {/* Project Dropdown */}
-          <div className="relative">
-            <Select
-              options={filteredProjects}
-              onChange={handleProjectSelect}
-              value={projectOptions.find(
-                (project) => project.value === selectedProject
-              )}
-              onMenuOpen={() => setIsProjectDropdownOpen(true)}
-              onMenuClose={() => setIsProjectDropdownOpen(false)}
-              isClearable
-              placeholder="Select project"
-            />
+          {/* Date Range Picker */}
+          <div className="relative flex flex-col space-y-2">
+            <div className="flex space-x-2">
+              <DatePicker
+                selected={startDate}
+                onChange={(dates) => {
+                  const [start, end] = dates;
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+                startDate={startDate}
+                endDate={endDate}
+                selectsRange
+                isClearable
+                placeholderText="Select date range"
+                className="border p-2 rounded w-full"
+                maxDate={currentDate} 
+              />
+            </div>
           </div>
-
-          {/* <div className="relative">
-            <label
-              htmlFor="startDate"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Start Date
-            </label>
-            <input
-              type="date"
-              id="startDate"
-              value={startDate || ""}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="border p-2 rounded"
-            />
-          </div>
-
-          <div className="relative">
-            <label
-              htmlFor="endDate"
-              className="block text-sm font-medium text-gray-700"
-            >
-              End Date
-            </label>
-            <input
-              type="date"
-              id="endDate"
-              value={endDate || ""}
-              onChange={(e) => setEndDate(e.target.value)}
-              className="border p-2 rounded"
-            />
-          </div> */}
         </div>
 
         {/* Display the filtered and paginated data */}
@@ -415,28 +403,30 @@ const filteredData =
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {item.time ? item.time : "N/A"} hrs
                           </td>
-                          <td
-                            className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
-                              item.status === "completed"
-                                ? "bg-green-500 text-white"
-                                : item.status === "wip"
-                                ? "bg-yellow-500 text-black"
+                          <td>
+                            <span
+                              className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
+                                item.status === "completed"
+                                  ? "bg-green-500 text-white"
+                                  : item.status === "wip"
+                                  ? "bg-yellow-500 text-black"
+                                  : item.status === "aborted"
+                                  ? "bg-red-500 text-white"
+                                  : item.status === ""
+                                  ? "bg-gray-200 text-gray-800"
+                                  : "bg-gray-200 text-gray-800"
+                              }`}
+                            >
+                              {item.status === "wip"
+                                ? "Work In Progress"
+                                : item.status === "completed"
+                                ? "Completed"
                                 : item.status === "aborted"
-                                ? "bg-red-500 text-white"
+                                ? "Aborted"
                                 : item.status === ""
-                                ? "bg-gray-200 text-gray-800"
-                                : "bg-gray-200 text-gray-800"
-                            }`}
-                          >
-                            {item.status === "wip"
-                              ? "Work In Progress"
-                              : item.status === "completed"
-                              ? "Completed"
-                              : item.status === "aborted"
-                              ? "Aborted"
-                              : item.status === ""
-                              ? "Pending"
-                              : item.status}
+                                ? "Pending"
+                                : item.status}
+                            </span>
                           </td>
                         </tr>
                       ))}

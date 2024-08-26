@@ -149,12 +149,12 @@ const Home = ({ children }) => {
               <Divider />
               <Link href="/dashboard/user">
                 <ListItem button>
-                  <ListItemText primary="Employees" />
+                  <ListItemText primary="Manage Employee" />
                 </ListItem>
               </Link>
               <Link href="/dashboard/task">
                 <ListItem button>
-                  <ListItemText primary="Assign Task" />
+                  <ListItemText primary="Manage Task" />
                 </ListItem>
               </Link>
             </>

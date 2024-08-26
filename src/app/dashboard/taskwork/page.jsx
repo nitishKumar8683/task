@@ -19,6 +19,8 @@ const Page = () => {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
   const dispatch = useDispatch();
   const { taskData, isLoading, error } = useSelector((state) => state.task);
 
@@ -63,11 +65,21 @@ const Page = () => {
     }
   };
 
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = taskData.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(taskData.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
     <DefaultPage>
       <div className="p-6 bg-gray-50 min-h-screen">
         <h1 className="text-3xl font-extrabold text-gray-800 border-b-4 border-indigo-600 pb-2 mb-4">
-          Task Data
+          Total Task Data
         </h1>
         {isLoading && (
           <div className="flex items-center justify-center">
@@ -78,93 +90,118 @@ const Page = () => {
           <div className="text-red-500 text-center mt-4">Error: {error}</div>
         )}
         {!isLoading && !error && (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Client Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Project Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Task
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Time
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {taskData.length > 0 ? (
-                taskData.map((item) => (
-                  <tr
-                    key={item._id}
-                    className="hover:bg-gray-50 transition duration-200"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.clientName}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.projectName}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
-                      {item.task}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      {item.time ? item.time : "N/A"}
-                    </td>
-                    <td
-                      className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md ${
-                        item.status === "completed"
-                          ? "bg-green-500 text-white"
-                          : item.status === "wip"
-                          ? "bg-yellow-500 text-black"
-                          : item.status === "aborted"
-                          ? "bg-red-500 text-white"
-                          : item.status === ""
-                          ? "bg-gray-200 text-gray-800"
-                          : "bg-gray-200 text-gray-800"
-                      }`}
+          <>
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Client Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Project Name
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Task
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {currentItems.length > 0 ? (
+                  currentItems.map((item) => (
+                    <tr
+                      key={item._id}
+                      className="hover:bg-gray-50 transition duration-200"
                     >
-                      {item.status === "wip"
-                        ? "Work In Progress"
-                        : item.status === "completed"
-                        ? "Completed"
-                        : item.status === "aborted"
-                        ? "Aborted"
-                        : item.status === ""
-                        ? "Pending"
-                        : item.status}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                      <button
-                        onClick={() => handleOpenUpdateModal(item)}
-                        className="text-indigo-600 hover:text-indigo-900"
-                      >
-                        <FaEdit size={20} />
-                      </button>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {item.clientName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {item.projectName}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 break-words max-w-xs">
+                        {item.task}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {item.time ? item.time : "N/A"}
+                      </td>
+                      <td>
+                        <span
+                          className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md text-center inline-block ${
+                            item.status === "completed"
+                              ? "bg-green-500 text-white w-32" 
+                              : item.status === "wip"
+                              ? "bg-yellow-500 text-black w-32" 
+                              : item.status === "aborted"
+                              ? "bg-red-500 text-white w-32" 
+                              : item.status === ""
+                              ? "bg-gray-200 text-gray-800 w-32" 
+                              : "bg-gray-200 text-gray-800 w-32" 
+                          }`}
+                        >
+                          {item.status === "wip"
+                            ? "Work In Progress"
+                            : item.status === "completed"
+                            ? "Completed"
+                            : item.status === "aborted"
+                            ? "Aborted"
+                            : item.status === ""
+                            ? "Pending"
+                            : item.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <button
+                          onClick={() => handleOpenUpdateModal(item)}
+                          className="text-indigo-600 hover:text-indigo-900"
+                        >
+                          <FaEdit size={20} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td
+                      colSpan="6"
+                      className="px-6 py-4 text-center text-gray-500"
+                    >
+                      No results found
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td
-                    colSpan="6"
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No results found
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+            <div className="flex justify-center mt-4">
+              <nav className="flex items-center">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Previous
+                </button>
+                <span className="mx-2 text-sm text-gray-700">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 border border-gray-300 rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </nav>
+            </div>
+          </>
         )}
         <Transition appear show={isUpdateModalOpen} as={Fragment}>
           <Dialog

@@ -85,47 +85,50 @@ const Page = () => {
     }
   };
 
-  const handleEditSubmit = async (values) => {
-    setIsSubmitting(true);
-    try {
-      const response = await axios.put(
-        `/api/users/updateUser/${editItemData._id}`,
-        values
-      );
-      console.log(response);
-      if (response.data.status === 201) {
-        toast.success(response.data.message);
-        handleCloseEditModal();
-        dispatch(fetchUserData());
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+ const handleEditSubmit = async (values) => {
+   setIsSubmitting(true);
+   try {
+     const response = await axios.put(
+       `/api/users/updateUser?id=${editItemData._id}`, 
+       values
+     );
 
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await axios.delete(`/api/users/deleteUser/${itemId}`);
-      if (response.data.status === 200) {
-        toast.success(response.data.message);
-        handleCloseDeleteModal();
-        dispatch(fetchUserData());
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user.");
-    } finally {
-      setIsDeleting(false);
+     console.log(response);
+     if (response.data.status === 200) {
+       toast.success(response.data.message);
+       handleCloseEditModal();
+       dispatch(fetchUserData());
+     } else {
+       toast.error(response.data.message);
+     }
+   } catch (error) {
+     console.error("Error updating user:", error);
+     toast.error("Failed to update user.");
+   } finally {
+     setIsSubmitting(false);
+   }
+ };
+
+
+const handleConfirmDelete = async () => {
+  setIsDeleting(true);
+  try {
+    const response = await axios.delete(`/api/users/deleteUser?id=${itemId}`); 
+    if (response.data.status === 200) {
+      toast.success(response.data.message);
+      handleCloseDeleteModal();
+      dispatch(fetchUserData());
+    } else {
+      toast.error(response.data.message);
     }
-  };
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    toast.error("Failed to delete user.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
 
   const filteredData = userAllAPIData
     ? userAllAPIData.filter(

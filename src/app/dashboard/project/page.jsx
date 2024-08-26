@@ -34,12 +34,12 @@ const Page = () => {
     (state) => state.projectAll
   );
 
- useEffect(() => {
-   dispatch(fetchProjectData());
-   return () => {
-     dispatch(clearProjectData());
-   };
- }, [dispatch]);
+  useEffect(() => {
+    dispatch(fetchProjectData());
+    return () => {
+      dispatch(clearProjectData());
+    };
+  }, [dispatch]);
 
   useEffect(() => {
     console.log("Client Data:", projectAllAPIData);
@@ -61,7 +61,7 @@ const Page = () => {
   const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
 
   const validationSchema = Yup.object({
-    name: Yup.string().required("Name is required")
+    name: Yup.string().required("Name is required"),
   });
 
   const handleAddSubmit = async (values, { resetForm }) => {
@@ -81,52 +81,53 @@ const Page = () => {
     }
   };
 
-  const handleEditSubmit = async (values) => {
-    setIsSubmitting(true);
-    try {
-      const response = await axios.put(
-        `/api/project/updateUser/${editItemData._id}`,
-        values
-      );
-      console.log(response);
-      if (response.data.status === 201) {
-        toast.success(response.data.message);
-        handleCloseEditModal();
-        dispatch(fetchProjectData());
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      toast.error("Failed to update user.");
-    } finally {
-      setIsSubmitting(false);
+const handleEditSubmit = async (values) => {
+  setIsSubmitting(true);
+  try {
+    const response = await axios.put(
+      `/api/project/updateUser?id=${editItemData._id}`, 
+      values
+    );
+    console.log(response);
+    if (response.data.status === 200) {
+      toast.success(response.data.message);
+      handleCloseEditModal();
+      dispatch(fetchProjectData());
+    } else {
+      toast.error(response.data.message);
     }
-  };
+  } catch (error) {
+    console.error("Error updating project:", error);
+    toast.error("Failed to update project.");
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-  const handleConfirmDelete = async () => {
-    setIsDeleting(true);
-    try {
-      const response = await axios.delete(`/api/project/deleteUser/${itemId}`);
-      if (response.data.status === 200) {
-        toast.success(response.data.message);
-        handleCloseDeleteModal();
-        dispatch(fetchProjectData());
-      } else {
-        toast.error(response.data.message);
-      }
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      toast.error("Failed to delete user.");
-    } finally {
-      setIsDeleting(false);
+
+const handleConfirmDelete = async () => {
+  setIsDeleting(true);
+  try {
+    const response = await axios.delete(`/api/project/deleteUser?id=${itemId}`); 
+    if (response.data.status === 200) {
+      toast.success(response.data.message);
+      handleCloseDeleteModal();
+      dispatch(fetchProjectData());
+    } else {
+      toast.error(response.data.message);
     }
-  };
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    toast.error("Failed to delete project.");
+  } finally {
+    setIsDeleting(false);
+  }
+};
+
 
   const filteredData = projectAllAPIData
-    ? projectAllAPIData.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) 
+    ? projectAllAPIData.filter((item) =>
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
 

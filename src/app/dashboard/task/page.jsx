@@ -29,7 +29,6 @@ import { CSVLink } from "react-csv";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
-
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedClient, setSelectedClient] = useState(null);
@@ -85,7 +84,7 @@ const Page = () => {
 
   const handleClientSelect = (option) => {
     setSelectedClient(option ? option.value : null);
-    setSearchTerm(""); 
+    setSearchTerm("");
     setIsClientDropdownOpen(false);
   };
 
@@ -113,9 +112,9 @@ const Page = () => {
   const handleOpenAddModal = () => setIsAddModalOpen(true);
   const handleCloseAddModal = () => {
     setIsAddModalOpen(false);
-    setSelectedClient(null); 
-    setSelectedStatus(null); 
-    setSelectedProject(null); 
+    setSelectedClient(null);
+    setSelectedStatus(null);
+    setSelectedProject(null);
   };
 
   const validationSchema = Yup.object({
@@ -157,41 +156,24 @@ const Page = () => {
     option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
   );
 
-const filteredData = (taskworkAllAPIData || []).filter((item) => {
-  // Check if item matches the selected client
-  const isClientMatch = selectedClient
-    ? item.client.toLowerCase() === selectedClient.toLowerCase()
-    : true;
-
-  // Check if item matches the selected status
-  const isStatusMatch = selectedStatus
-    ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-    : true;
-
-  // Check if item matches the selected project
-  const isProjectMatch = selectedProject
-    ? item.project.toLowerCase() === selectedProject.toLowerCase()
-    : true;
-
-  // Parse the item creation date
-  const itemDate = new Date(item.createdAt);
-
-  // Adjust end date to include the entire day
-  const adjustedEndDate = new Date(endDate);
-  adjustedEndDate.setHours(23, 59, 59, 999);
-
-  // Check if itemDate is within the specified date range
-  const isDateInRange =
-    (!startDate || itemDate >= new Date(startDate)) &&
-    (!endDate || itemDate <= adjustedEndDate);
-
-  // Return true if all conditions are met
-  return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
-});
-
-
-
-
+  const filteredData = (taskworkAllAPIData || []).filter((item) => {
+    const isClientMatch = selectedClient
+      ? item.client.toLowerCase() === selectedClient.toLowerCase()
+      : true;
+    const isStatusMatch = selectedStatus
+      ? item.status.toLowerCase() === selectedStatus.toLowerCase()
+      : true;
+    const isProjectMatch = selectedProject
+      ? item.project.toLowerCase() === selectedProject.toLowerCase()
+      : true;
+    const itemDate = new Date(item.createdAt);
+    const adjustedEndDate = new Date(endDate);
+    adjustedEndDate.setHours(23, 59, 59, 999);
+    const isDateInRange =
+      (!startDate || itemDate >= new Date(startDate)) &&
+      (!endDate || itemDate <= adjustedEndDate);
+    return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
+  });
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -235,36 +217,35 @@ const filteredData = (taskworkAllAPIData || []).filter((item) => {
   const timeArray = paginatedData.map((item) => item.time);
   const totalTime = sumTime(timeArray);
 
- const prepareExportData = () => {
-   const data = paginatedData.map((item) => ({
-     Client: item.clientName,
-     Project: item.projectName,
-     Task: item.task,
-     Assigned: `${item.assignedUserName} (${item.assignedUserEmail})`,
-     Time: item.time || "N/A",
-     Status:
-       item.status === "wip"
-         ? "Work In Progress"
-         : item.status === "completed"
-         ? "Completed"
-         : item.status === "aborted"
-         ? "Aborted"
-         : "Pending",
-   }));
-   return [
-     ...data,
-     {
-       Client: "Total Time",
-       Project: "",
-       Task: "",
-       Assigned: "",
-       Time: totalTime,
-       Status: "",
-     },
-   ];
- };
- 
- 
+  const prepareExportData = () => {
+    const data = paginatedData.map((item) => ({
+      Client: item.clientName,
+      Project: item.projectName,
+      Task: item.task,
+      Assigned: `${item.assignedUserName} (${item.assignedUserEmail})`,
+      Time: item.time || "N/A",
+      Status:
+        item.status === "wip"
+          ? "Work In Progress"
+          : item.status === "completed"
+          ? "Completed"
+          : item.status === "aborted"
+          ? "Aborted"
+          : "Pending",
+    }));
+    return [
+      ...data,
+      {
+        Client: "Total Time",
+        Project: "",
+        Task: "",
+        Assigned: "",
+        Time: totalTime,
+        Status: "",
+      },
+    ];
+  };
+
   return (
     <DefaultPage>
       <div className="p-6 bg-gray-50 min-h-screen">
@@ -352,7 +333,7 @@ const filteredData = (taskworkAllAPIData || []).filter((item) => {
                 selectsRange
                 isClearable
                 placeholderText="Select date range"
-                className="border p-2 rounded w-full"
+                className="border p-2 rounded w-96"
                 maxDate={currentDate}
               />
             </div>

@@ -24,7 +24,7 @@ import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { BeatLoader } from "react-spinners";
-import axios from 'axios'; 
+import axios from 'axios';
 
 // Validation schema excluding address
 const validationSchema = Yup.object({
@@ -38,7 +38,7 @@ const Profile = () => {
     const [user, setUser] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
-    const [isLoadingData, setIsLoadingData] = useState(true); 
+    const [isLoadingData, setIsLoadingData] = useState(true);
     const router = useRouter();
     const dispatch = useDispatch();
     const { userAPIData, isLoading } = useSelector((state) => state.user || {});
@@ -52,7 +52,7 @@ const Profile = () => {
                     router.push('/');
                 }
             } finally {
-                setIsLoadingData(false); 
+                setIsLoadingData(false);
             }
         };
 
@@ -136,7 +136,7 @@ const Profile = () => {
                     right={0}
                     bottom={0}
                     bgcolor="rgba(255, 255, 255, 0.8)"
-                    zIndex={1200} 
+                    zIndex={1200}
                 >
                     <BeatLoader color="#1976d2" />
                 </Box>
@@ -253,7 +253,16 @@ const Profile = () => {
                             </Formik>
 
                         ) : (
-                            <Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    textAlign: 'center',
+                                    p: 2,
+                                }}
+                            >
                                 <Typography variant="h4" sx={{ fontWeight: 'bold', mb: 1 }}>
                                     {`${user.name}`}
                                 </Typography>
@@ -261,7 +270,7 @@ const Profile = () => {
                                     <strong>Email: </strong> {user.email}
                                 </Typography>
                                 <Typography variant="body1" sx={{ mb: 1 }}>
-                                        <strong>Phone: </strong> {user.phonenumber}
+                                    <strong>Phone: </strong> {user.phonenumber}
                                 </Typography>
                             </Box>
                         )}
@@ -275,6 +284,7 @@ const Profile = () => {
                                     sx={{
                                         width: '100%',
                                         backgroundColor: isEditing ? '#e57373' : '#1976d2',
+                                        color: 'white', 
                                         '&:hover': {
                                             backgroundColor: isEditing ? '#c62828' : '#0d47a1',
                                             transform: 'scale(1.05)',
@@ -286,6 +296,7 @@ const Profile = () => {
                                 </IconButton>
                             </Tooltip>
                         </Grid>
+
                         <Grid item xs={6}>
                             {error && (
                                 <Typography variant="body2" color="error" sx={{ mb: 2 }}>

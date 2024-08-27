@@ -20,28 +20,20 @@ const Login = () => {
   const router = useRouter();
 
   const formik = useFormik({
-    initialValues: {
-      email: "",
-      password: "",
-    },
-    validationSchema: validationSchema,
+    initialValues: { email: "", password: "" },
+    validationSchema,
     onSubmit: async (values, { setSubmitting }) => {
       setIsLoading(true);
-
       try {
         const response = await axios.post("/api/users/login", values);
-        console.log(response);
-        if (response.data.success == true) {
+        if (response.data.success) {
           toast.success(response.data.message);
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 1000);
-        }
-        else{
-            toast.error(response.data.message);
+          setTimeout(() => router.push("/dashboard"), 1000);
+        } else {
+          toast.error(response.data.message);
         }
       } catch (error) {
-        toast.error("Network Issue");
+        toast.error(error.response?.data?.message || "Network Issue");
       } finally {
         setIsLoading(false);
         setSubmitting(false);
@@ -127,3 +119,4 @@ const Login = () => {
 };
 
 export default Login;
+

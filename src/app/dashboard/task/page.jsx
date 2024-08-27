@@ -88,6 +88,16 @@ const Page = () => {
     setIsClientDropdownOpen(false);
   };
 
+  const handleProjectSelect = (option) => {
+    setSelectedProject(option ? option.value : null);
+    setIsProjectDropdownOpen(false);
+  };
+
+  const handleStatusSelect = (option) => {
+    setSelectedStatus(option ? option.value : null);
+    setIsStatusDropdownOpen(false);
+  };
+
   const handleClientSearch = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -153,27 +163,29 @@ const Page = () => {
   };
 
   const filteredProjects = projectOptions.filter((option) =>
-    option.label.toLowerCase().includes((selectedProject || "").toLowerCase())
+    selectedProject
+      ? option.label.toLowerCase().includes(selectedProject.toLowerCase())
+      : true
   );
 
-  const filteredData = (taskworkAllAPIData || []).filter((item) => {
-    const isClientMatch = selectedClient
-      ? item.client.toLowerCase() === selectedClient.toLowerCase()
-      : true;
-    const isStatusMatch = selectedStatus
-      ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-      : true;
-    const isProjectMatch = selectedProject
-      ? item.project.toLowerCase() === selectedProject.toLowerCase()
-      : true;
-    const itemDate = new Date(item.createdAt);
-    const adjustedEndDate = new Date(endDate);
-    adjustedEndDate.setHours(23, 59, 59, 999);
-    const isDateInRange =
-      (!startDate || itemDate >= new Date(startDate)) &&
-      (!endDate || itemDate <= adjustedEndDate);
-    return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
-  });
+ const filteredData = (taskworkAllAPIData || []).filter((item) => {
+   const isClientMatch = selectedClient
+     ? item.client.toLowerCase() === selectedClient.toLowerCase()
+     : true;
+   const isStatusMatch = selectedStatus
+     ? item.status.toLowerCase() === selectedStatus.toLowerCase()
+     : true;
+   const isProjectMatch = selectedProject
+     ? item.project.toLowerCase() === selectedProject.toLowerCase()
+     : true;
+   const itemDate = new Date(item.createdAt);
+   const adjustedEndDate = new Date(endDate);
+   adjustedEndDate.setHours(23, 59, 59, 999);
+   const isDateInRange =
+     (!startDate || itemDate >= new Date(startDate)) &&
+     (!endDate || itemDate <= adjustedEndDate);
+   return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
+ });
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
@@ -186,16 +198,6 @@ const Page = () => {
     )
       return;
     setCurrentPage(page);
-  };
-
-  const handleStatusSelect = (option) => {
-    setSelectedStatus(option ? option.value : null);
-    setIsStatusDropdownOpen(false);
-  };
-
-  const handleProjectSelect = (option) => {
-    setSelectedProject(option ? option.value : null);
-    setIsProjectDropdownOpen(false);
   };
 
   const sumTime = (timeArray) => {
@@ -333,7 +335,7 @@ const Page = () => {
                 selectsRange
                 isClearable
                 placeholderText="Select date range"
-                className="border p-2 rounded w-96"
+                className="border p-2 rounded w-60"
                 maxDate={currentDate}
               />
             </div>

@@ -8,7 +8,7 @@ import { fetchUserData } from "@/app/redux/user/userSlice";
 import { fetchClientData } from "../../app/redux/client/clientSlice";
 import { fetchProjectData } from "../../app/redux/project/projectSlice";
 import { fetchTaskWorkData } from "../../app/redux/taskwork/taskworkSlice";
-import { BeatLoader } from "react-spinners";
+import { Bars } from "react-loader-spinner";
 
 const Dashboard = () => {
   const dispatch = useDispatch();
@@ -50,8 +50,16 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Dashboard</h1>
         <div className="flex-grow">
           {isLoading ? (
-            <div className="flex justify-center items-center h-full">
-              <BeatLoader color="#4A90E2" />
+            <div className="flex h-48 items-center justify-center">
+              <Bars
+                height="80"
+                width="80"
+                color="#4fa94d"
+                ariaLabel="bars-loading"
+                wrapperStyle={{}}
+                wrapperClass=""
+                visible={true}
+              />
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">

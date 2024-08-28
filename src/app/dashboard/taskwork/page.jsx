@@ -131,20 +131,20 @@ const Page = () => {
                         {item.task}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {item.time ? item.time : "N/A"}
+                        {item.time ? `${item.time} hrs` : "🚫"}
                       </td>
                       <td>
                         <span
                           className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md text-center inline-block ${
                             item.status === "completed"
-                              ? "bg-green-500 text-white w-32" 
+                              ? "bg-green-500 text-white w-32"
                               : item.status === "wip"
-                              ? "bg-yellow-500 text-black w-32" 
+                              ? "bg-yellow-500 text-black w-32"
                               : item.status === "aborted"
-                              ? "bg-red-500 text-white w-32" 
+                              ? "bg-red-500 text-white w-32"
                               : item.status === ""
-                              ? "bg-gray-200 text-gray-800 w-32" 
-                              : "bg-gray-200 text-gray-800 w-32" 
+                              ? "bg-gray-200 text-gray-800 w-32"
+                              : "bg-gray-200 text-gray-800 w-32"
                           }`}
                         >
                           {item.status === "wip"
@@ -154,7 +154,7 @@ const Page = () => {
                             : item.status === "aborted"
                             ? "Aborted"
                             : item.status === ""
-                            ? "Pending"
+                            ? "Not Started"
                             : item.status}
                         </span>
                       </td>

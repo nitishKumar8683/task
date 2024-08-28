@@ -28,6 +28,8 @@ import Select from "react-select";
 import { CSVLink } from "react-csv";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import { MdDeleteOutline } from "react-icons/md";
+import { FaQuestionCircle } from "react-icons/fa";
 
 const Page = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,6 +46,36 @@ const Page = () => {
   const [startDate, setStartDate] = useState(null);
   const [endDate, setEndDate] = useState(null);
   const currentDate = new Date();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [isLoadingDelete, setIsLoadingDelete] = useState(false);
+
+   const handleDeleteClick = (itemId) => {
+     setItemToDelete(itemId);
+     setIsDeleteModalOpen(true);
+   };
+
+   const handleDeleteConfirm = async () => {
+     setIsLoadingDelete(true);
+     alert("Working on it...")
+    //  try {
+    //    await axios.delete(`/api/worktask/deleteWorkTask/${itemToDelete}`);
+    //    toast.success("Task deleted successfully.");
+    //    dispatch(fetchTaskWorkData());
+    //  } catch (error) {
+    //    console.error("Error deleting task:", error);
+    //    toast.error("Failed to delete task.");
+    //  } finally {
+    //    setIsLoadingDelete(false);
+    //    setIsDeleteModalOpen(false);
+    //    setItemToDelete(null);
+    //  }
+   };
+
+    const handleDeleteCancel = () => {
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
+    };
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
@@ -168,35 +200,42 @@ const Page = () => {
       : true
   );
 
- const filteredData = (taskworkAllAPIData || []).filter((item) => {
-   const isClientMatch = selectedClient
-     ? item.client.toLowerCase() === selectedClient.toLowerCase()
-     : true;
-   const isStatusMatch = selectedStatus
-     ? item.status.toLowerCase() === selectedStatus.toLowerCase()
-     : true;
-   const isProjectMatch = selectedProject
-     ? item.project.toLowerCase() === selectedProject.toLowerCase()
-     : true;
-   const itemDate = new Date(item.createdAt);
-   const adjustedEndDate = new Date(endDate);
-   adjustedEndDate.setHours(23, 59, 59, 999);
-   const isDateInRange =
-     (!startDate || itemDate >= new Date(startDate)) &&
-     (!endDate || itemDate <= adjustedEndDate);
-   return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
- });
+  const filteredData = (taskworkAllAPIData || []).filter((item) => {
+    const isClientMatch = selectedClient
+      ? item.client.toLowerCase() === selectedClient.toLowerCase()
+      : true;
+    const isStatusMatch = selectedStatus
+      ? item.status.toLowerCase() === selectedStatus.toLowerCase()
+      : true;
+    const isProjectMatch = selectedProject
+      ? item.project.toLowerCase() === selectedProject.toLowerCase()
+      : true;
+    const itemDate = new Date(item.createdAt);
+    const adjustedEndDate = new Date(endDate);
+    adjustedEndDate.setHours(23, 59, 59, 999);
+    const isDateInRange =
+      (!startDate || itemDate >= new Date(startDate)) &&
+      (!endDate || itemDate <= adjustedEndDate);
+    return isClientMatch && isStatusMatch && isProjectMatch && isDateInRange;
+  });
+
+  useEffect(() => {
+    const totalFilteredPages = Math.ceil(filteredData.length / itemsPerPage);
+    if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
+      setCurrentPage(totalFilteredPages);
+    } else if (totalFilteredPages === 0) {
+      setCurrentPage(1); 
+    }
+  }, [filteredData, currentPage]);
+
+  const totalFilteredPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
-    if (
-      page < 1 ||
-      page > Math.ceil((taskworkAllAPIData?.length || 0) / itemsPerPage)
-    )
-      return;
+    if (page < 1 || page > totalFilteredPages) return; // Ensure valid page number
     setCurrentPage(page);
   };
 
@@ -219,8 +258,40 @@ const Page = () => {
   const timeArray = paginatedData.map((item) => item.time);
   const totalTime = sumTime(timeArray);
 
-  const prepareExportData = () => {
-    const data = paginatedData.map((item) => ({
+  const calculateTotalTime = (data) => {
+    if (!Array.isArray(data)) return { hours: 0, minutes: 0 };
+
+    // Sum total hours and minutes
+    const total = data.reduce(
+      (acc, item) => {
+        const time = parseFloat(item.time) || 0;
+        const hours = Math.floor(time);
+        const minutes = Math.round((time - hours) * 60);
+
+        acc.hours += hours;
+        acc.minutes += minutes;
+
+        return acc;
+      },
+      { hours: 0, minutes: 0 }
+    );
+
+    // Adjust total minutes to hours if greater than 60
+    if (total.minutes >= 60) {
+      total.hours += Math.floor(total.minutes / 60);
+      total.minutes %= 60;
+    }
+
+    return total;
+  };
+
+  const totalTimeFilteredData = calculateTotalTime(filteredData);
+  const totalTimeFormatted = `${totalTimeFilteredData.hours}h ${totalTimeFilteredData.minutes}m`;
+
+  const prepareExportData = (data = []) => {
+    const totalTime = calculateTotalTime(data);
+
+    const formattedData = data.map((item) => ({
       Client: item.clientName,
       Project: item.projectName,
       Task: item.task,
@@ -235,18 +306,24 @@ const Page = () => {
           ? "Aborted"
           : "Pending",
     }));
+
+    const totalTimeFormatted = `${totalTime.hours}h ${totalTime.minutes}m`;
+
     return [
-      ...data,
+      ...formattedData,
       {
         Client: "Total Time",
         Project: "",
         Task: "",
         Assigned: "",
-        Time: totalTime,
+        Time: totalTimeFormatted,
         Status: "",
       },
     ];
   };
+
+  const allData = taskworkAllAPIData || [];
+  const exportData = prepareExportData(allData);
 
   return (
     <DefaultPage>
@@ -264,8 +341,9 @@ const Page = () => {
               <FaPlus size={16} className="mr-2" />
               Add New Task
             </button>
+
             <CSVLink
-              data={prepareExportData()}
+              data={prepareExportData(filteredData)}
               filename={"task-data.csv"}
               className="flex items-center px-4 py-2 bg-green-600 text-white font-semibold rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
             >
@@ -350,7 +428,7 @@ const Page = () => {
             <p className="text-red-500">Error loading data</p>
           ) : (
             <div>
-              {paginatedData.length === 0 ? (
+              {filteredData.length === 0 ? (
                 <p className="text-center text-gray-500 text-lg font-semibold mt-8">
                   No records found
                 </p>
@@ -378,6 +456,9 @@ const Page = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Status
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -389,17 +470,33 @@ const Page = () => {
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                             {item.projectName}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.task}
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            <div className="relative max-h-24 overflow-y-auto">
+                              {item.task}
+                            </div>
                           </td>
+
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {item.assignedUserName
-                              ? `${item.assignedUserName} (${item.assignedUserEmail})`
-                              : "Unknown User"}
+                            {item.assignedUserName ? (
+                              <div className="flex flex-col">
+                                <span className="font-semibold">
+                                  {item.assignedUserName}
+                                </span>
+                                <span className="text-gray-400">
+                                 ({item.assignedUserEmail})
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="italic text-gray-400">
+                                Unknown User
+                              </span>
+                            )}
                           </td>
+
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                            {item.time ? item.time : "N/A"} hrs
+                            {item.time ? `${item.time} hrs` : "🚫"}
                           </td>
+
                           <td>
                             <span
                               className={`px-3 py-1 text-xs font-medium whitespace-nowrap rounded-md text-center inline-block ${
@@ -421,9 +518,27 @@ const Page = () => {
                                 : item.status === "aborted"
                                 ? "Aborted"
                                 : item.status === ""
-                                ? "Pending"
+                                ? "Not Started"
                                 : item.status}
                             </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <div className="flex items-center space-x-4">
+                              {/* <button
+                                // onClick={() => getUserById(data._id)}
+                                className="p-2 bg-blue-400 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                                aria-label="Edit"
+                              >
+                                <FaEdit className="w-3 h-3" />
+                              </button> */}
+                              <button
+                                onClick={() => handleDeleteClick(item._id)}
+                                className="p-2 bg-red-400 text-white rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-300"
+                                aria-label="Delete"
+                              >
+                                <MdDeleteOutline className="w-3 h-3" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -438,26 +553,18 @@ const Page = () => {
                       <FaArrowLeft />
                     </button>
                     <span className="text-gray-700">
-                      Page {currentPage} of{" "}
-                      {Math.ceil(
-                        (taskworkAllAPIData?.length || 0) / itemsPerPage
-                      )}
+                      Page {currentPage} of {totalFilteredPages}
                     </span>
                     <button
                       onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={
-                        currentPage ===
-                        Math.ceil(
-                          (taskworkAllAPIData?.length || 0) / itemsPerPage
-                        )
-                      }
+                      disabled={currentPage === totalFilteredPages}
                       className="px-4 py-2 bg-gray-300 text-gray-800 font-semibold rounded-lg shadow-md hover:bg-gray-400"
                     >
                       <FaArrowRight />
                     </button>
                   </div>
                   <p className="mt-4 text-lg font-semibold">
-                    Total Time: {totalTime}
+                    Total Time : {totalTimeFormatted}
                   </p>
                 </div>
               )}
@@ -620,6 +727,48 @@ const Page = () => {
                     </Form>
                   )}
                 </Formik>
+              </Dialog.Panel>
+            </div>
+          </Dialog>
+        </Transition>
+
+        <Transition appear show={isDeleteModalOpen} as={Fragment}>
+          <Dialog
+            as="div"
+            open={isDeleteModalOpen}
+            onClose={handleDeleteCancel}
+            className="relative z-10"
+          >
+            <div className="fixed inset-0 bg-black/50" aria-hidden="true" />
+            <div className="fixed inset-0 flex items-center justify-center p-4">
+              <Dialog.Panel className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md mx-4 sm:mx-0 transform transition-all duration-300 scale-95 hover:scale-100">
+                <Dialog.Title className="text-2xl font-bold text-gray-900 mb-4">
+                  Confirm Deletion
+                </Dialog.Title>
+                <Dialog.Description className="mb-6 text-gray-700 text-lg">
+                  Are you sure you want to delete this task? This action cannot
+                  be undone.
+                </Dialog.Description>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    type="button"
+                    onClick={handleDeleteCancel}
+                    className="px-6 py-2 bg-gray-600 text-white rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition duration-150"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDeleteConfirm}
+                    className="px-6 py-2 bg-red-700 text-white rounded-lg shadow-md hover:bg-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 transition duration-150"
+                  >
+                    {isLoadingDelete ? (
+                      <PuffLoader size={20} color={"#ffffff"} />
+                    ) : (
+                      "Confirm"
+                    )}
+                  </button>
+                </div>
               </Dialog.Panel>
             </div>
           </Dialog>

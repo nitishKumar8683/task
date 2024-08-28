@@ -80,33 +80,34 @@ const Profile = () => {
         setLoading(true);
         try {
             const formData = createFormData(values);
+            const url = `/api/users/profileUpdate?id=${user._id}`;
 
-            const response = await axios.put(`/api/users/profileUpdate/${user._id}`, formData, {
+            const response = await axios.put(url, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data'
                 }
             });
 
-            const result = response.data;
-
             if (response.status === 200) {
+                const result = response.data;
                 toast.success(result.msg || 'Profile updated successfully');
                 setIsEditing(false);
                 setError(null);
                 setUser(prev => ({ ...prev, ...result.updateMe }));
-
                 dispatch(fetchApiUsers());
-
             } else {
-                toast.error(result.msg || 'Profile update failed');
-                setError(result.error || 'Failed to update profile');
+                toast.error(response.data.msg || 'Profile update failed');
+                setError(response.data.error || 'Failed to update profile');
             }
         } catch (err) {
+            toast.error(err.response?.data?.error || 'An unexpected error occurred');
             setError(err.message || 'An unexpected error occurred');
         } finally {
             setLoading(false);
         }
     };
+
+
 
 
     const createFormData = (values) => {

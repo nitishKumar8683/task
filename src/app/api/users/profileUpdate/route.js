@@ -9,6 +9,7 @@ connect();
 export async function PUT(req) {
     const url = new URL(req.url);
     const id = url.searchParams.get('id'); 
+    console.log(id)
 
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
         return NextResponse.json({

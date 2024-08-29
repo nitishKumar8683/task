@@ -157,13 +157,16 @@ const handleConfirmDelete = async () => {
 };
 
 
-  const filteredData = clientAllAPIData
-    ? clientAllAPIData.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.email.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+const filteredData = clientAllAPIData
+  ? clientAllAPIData.filter((item) => {
+      const name = item.name ? item.name.toLowerCase() : "";
+      const email = item.email ? item.email.toLowerCase() : "";
+      const searchLower = searchTerm.toLowerCase();
+
+      return name.includes(searchLower) || email.includes(searchLower);
+    })
+  : [];
+
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);

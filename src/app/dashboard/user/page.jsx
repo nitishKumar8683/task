@@ -57,10 +57,12 @@ const Page = () => {
     setIsDeleteModalOpen(true);
   };
   const handleCloseDeleteModal = () => setIsDeleteModalOpen(false);
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   const validationSchema = Yup.object({
     name: Yup.string().required("Name is required"),
     email: Yup.string()
+      .matches(emailRegex, "Invalid email address")
       .email("Invalid email address")
       .required("Email is required"),
     phonenumber: Yup.string()

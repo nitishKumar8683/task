@@ -50,32 +50,33 @@ const Page = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingDelete, setIsLoadingDelete] = useState(false);
 
-   const handleDeleteClick = (itemId) => {
-     setItemToDelete(itemId);
-     setIsDeleteModalOpen(true);
-   };
+  const handleDeleteClick = (itemId) => {
+    setItemToDelete(itemId);
+    setIsDeleteModalOpen(true);
+  };
 
-   const handleDeleteConfirm = async () => {
-     setIsLoadingDelete(true);
-     alert("Working on it...")
-    //  try {
-    //    await axios.delete(`/api/worktask/deleteWorkTask/${itemToDelete}`);
-    //    toast.success("Task deleted successfully.");
-    //    dispatch(fetchTaskWorkData());
-    //  } catch (error) {
-    //    console.error("Error deleting task:", error);
-    //    toast.error("Failed to delete task.");
-    //  } finally {
-    //    setIsLoadingDelete(false);
-    //    setIsDeleteModalOpen(false);
-    //    setItemToDelete(null);
-    //  }
-   };
-
-    const handleDeleteCancel = () => {
+  const handleDeleteConfirm = async () => {
+    setIsLoadingDelete(true);
+    try {
+      const response = await axios.delete(
+        `/api/worktask/deleteTask?id=${itemToDelete}`
+      );
+      toast.success(response.data.message);
+      dispatch(fetchTaskWorkData());
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task.");
+    } finally {
+      setIsLoadingDelete(false);
       setIsDeleteModalOpen(false);
       setItemToDelete(null);
-    };
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  };
 
   const dispatch = useDispatch();
   const { clientAllAPIData } = useSelector((state) => state.clientAll);
@@ -224,7 +225,7 @@ const Page = () => {
     if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
       setCurrentPage(totalFilteredPages);
     } else if (totalFilteredPages === 0) {
-      setCurrentPage(1); 
+      setCurrentPage(1);
     }
   }, [filteredData, currentPage]);
 
@@ -235,7 +236,7 @@ const Page = () => {
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
   const handlePageChange = (page) => {
-    if (page < 1 || page > totalFilteredPages) return; // Ensure valid page number
+    if (page < 1 || page > totalFilteredPages) return;
     setCurrentPage(page);
   };
 
@@ -261,7 +262,6 @@ const Page = () => {
   const calculateTotalTime = (data) => {
     if (!Array.isArray(data)) return { hours: 0, minutes: 0 };
 
-    // Sum total hours and minutes
     const total = data.reduce(
       (acc, item) => {
         const time = parseFloat(item.time) || 0;
@@ -275,8 +275,6 @@ const Page = () => {
       },
       { hours: 0, minutes: 0 }
     );
-
-    // Adjust total minutes to hours if greater than 60
     if (total.minutes >= 60) {
       total.hours += Math.floor(total.minutes / 60);
       total.minutes %= 60;
@@ -483,7 +481,7 @@ const Page = () => {
                                   {item.assignedUserName}
                                 </span>
                                 <span className="text-gray-400">
-                                 ({item.assignedUserEmail})
+                                  ({item.assignedUserEmail})
                                 </span>
                               </div>
                             ) : (
@@ -732,6 +730,7 @@ const Page = () => {
           </Dialog>
         </Transition>
 
+        {/* Delete Task Modal */}
         <Transition appear show={isDeleteModalOpen} as={Fragment}>
           <Dialog
             as="div"
